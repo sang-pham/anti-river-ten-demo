@@ -1,0 +1,51 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16
+    container_name: go-demo-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-go_demo}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - appnet
+
+  api:
+    build: .
+    container_name: go-demo-api
+    restart: unless-stopped
+    environment:
+      PORT: ${PORT:-8081}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-30s}
+      MAX_BODY_BYTES: ${MAX_BODY_BYTES:-1048576}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      # Use the postgres service hostname inside the compose network
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/go_demo?sslmode=disable}
+      JWT_SECRET: ${JWT_SECRET:-agrcKBGjR3HfmSJUzuUfZ9WJoLSLsdfi8Y/lAFeCnAM=}
+      JWT_TTL: ${JWT_TTL:-1h}
+      REFRESH_TTL: ${REFRESH_TTL:-24h}
+    ports:
+      - "${PORT:-8081}:8081"
+    depends_on:
+      - postgres
+    networks:
+      - appnet
+
+volumes:
+  pgdata:
+
+networks:
+  appnet:
+    driver: bridge
