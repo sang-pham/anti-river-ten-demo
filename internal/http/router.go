@@ -6,6 +6,8 @@ import (
 
 	"log/slog"
 
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"go-demo/internal/auth"
 	"go-demo/internal/config"
 	"go-demo/internal/http/handlers"
@@ -20,6 +22,16 @@ func NewRouter(cfg config.Config, log *slog.Logger, authSvc *auth.Service) nhttp
 
 	// expvar
 	mux.Handle("GET /debug/vars", expvar.Handler())
+
+	// Swagger UI (non-production only)
+	if cfg.Env != "production" {
+		// Redirect /swagger to /swagger/index.html for convenience
+		mux.HandleFunc("GET /swagger", func(w nhttp.ResponseWriter, r *nhttp.Request) {
+			nhttp.Redirect(w, r, "/swagger/index.html", nhttp.StatusFound)
+		})
+		// Mount at /swagger/ (serves UI and doc.json)
+		mux.Handle("/swagger/", httpSwagger.WrapHandler)
+	}
 
 	// Auth endpoints
 	if authSvc != nil {

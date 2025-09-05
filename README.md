@@ -141,3 +141,33 @@ References
 
 - docs/architecture.md
 - .cursor/rules/go-project-rules.md
+
+## Swagger UI
+
+This project uses swaggo annotations to generate OpenAPI docs and serves Swagger UI at /swagger in non-production environments.
+
+- Generation
+
+  - Install swag CLI (already added in go install step when setting up): go install github.com/swaggo/swag/cmd/swag@v1.16.4
+  - Or use Makefile target: make swagger
+  - This generates docs/ with docs.go, swagger.json, swagger.yaml
+
+- Serving the UI
+
+  - The router mounts Swagger UI at /swagger only when APP_ENV != production
+  - Set APP_ENV=development (default) in your environment or .env
+
+- Quick usage
+
+  - Update .env (or environment):
+    - APP_ENV=development
+  - Generate docs:
+    - make swagger
+  - Run the API (ensure your DATABASE_URL etc. are set), then open:
+    - http://localhost:${PORT:-8080}/swagger
+
+- Notes
+  - Protected endpoints (e.g., /v1/auth/me) use BearerAuth (Authorization header)
+  - Health endpoints are documented:
+    - GET /healthz
+    - GET /readyz

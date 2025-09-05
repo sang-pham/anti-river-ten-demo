@@ -13,6 +13,7 @@ type Config struct {
 	RequestTimeout time.Duration
 	MaxBodyBytes   int64
 	AllowedOrigins []string
+	Env            string
 
 	// Auth/DB
 	DatabaseURL string
@@ -28,6 +29,7 @@ func FromEnv() (Config, error) {
 		RequestTimeout: parseDuration(getenv("REQUEST_TIMEOUT", "30s"), 30*time.Second),
 		MaxBodyBytes:   parseInt64(getenv("MAX_BODY_BYTES", "1048576"), 1048576),
 		AllowedOrigins: parseCSV(getenv("ALLOWED_ORIGINS", "")),
+		Env:            getenv("APP_ENV", "development"),
 
 		DatabaseURL: getenv("DATABASE_URL", ""),
 		JWTSecret:   getenv("JWT_SECRET", ""),

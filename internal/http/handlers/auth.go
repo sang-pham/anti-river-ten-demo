@@ -22,13 +22,13 @@ func NewAuth(s *auth.Service, log *slog.Logger, maxBodyBytes int64) Auth {
 	return Auth{S: s, Log: log, MaxBodyBytes: maxBodyBytes}
 }
 
-type registerReq struct {
+type RegisterReq struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type userResp struct {
+type UserResp struct {
 	ID          string    `json:"id"`
 	Username    string    `json:"username"`
 	Email       string    `json:"email"`
@@ -38,6 +38,17 @@ type userResp struct {
 	Role        string    `json:"role"`
 }
 
+// Register godoc
+// @Summary Register user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterReq true "Register request"
+// @Success 201 {object} UserResp
+// @Failure 400 {object} ErrorEnvelope
+// @Failure 409 {object} ErrorEnvelope
+// @Failure 500 {object} ErrorEnvelope
+// @Router /v1/auth/register [post]
 func (h Auth) Register() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -49,7 +60,7 @@ func (h Auth) Register() http.Handler {
 		dec := json.NewDecoder(io.LimitReader(r.Body, h.MaxBodyBytes))
 		dec.DisallowUnknownFields()
 
-		var req registerReq
+		var req RegisterReq
 		if err := dec.Decode(&req); err != nil {
 			writeError(w, http.StatusBadRequest, "bad_request", "invalid JSON payload")
 			return
@@ -66,7 +77,7 @@ func (h Auth) Register() http.Handler {
 			}
 		}
 
-		resp := userResp{
+		resp := UserResp{
 			ID:          u.ID,
 			Username:    u.Username,
 			Email:       u.Email,
@@ -79,19 +90,31 @@ func (h Auth) Register() http.Handler {
 	})
 }
 
-type loginReq struct {
+type LoginReq struct {
 	Identifier string `json:"identifier"` // username or email
 	Password   string `json:"password"`
 }
 
-type loginResp struct {
+type LoginResp struct {
 	Token            string    `json:"token"`
 	ExpiresAt        time.Time `json:"expires_at"`
 	RefreshToken     string    `json:"refresh_token"`
 	RefreshExpiresAt time.Time `json:"refresh_expires_at"`
-	User             userResp  `json:"user"`
+	User             UserResp  `json:"user"`
 }
 
+// Login godoc
+// @Summary Login
+// @Description Login with username or email
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body LoginReq true "Login request"
+// @Success 200 {object} LoginResp
+// @Failure 400 {object} ErrorEnvelope
+// @Failure 401 {object} ErrorEnvelope
+// @Failure 500 {object} ErrorEnvelope
+// @Router /v1/auth/login [post]
 func (h Auth) Login() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -103,7 +126,7 @@ func (h Auth) Login() http.Handler {
 		dec := json.NewDecoder(io.LimitReader(r.Body, h.MaxBodyBytes))
 		dec.DisallowUnknownFields()
 
-		var req loginReq
+		var req LoginReq
 		if err := dec.Decode(&req); err != nil {
 			writeError(w, http.StatusBadRequest, "bad_request", "invalid JSON payload")
 			return
@@ -119,12 +142,12 @@ func (h Auth) Login() http.Handler {
 			return
 		}
 
-		resp := loginResp{
+		resp := LoginResp{
 			Token:            tok,
 			ExpiresAt:        exp,
 			RefreshToken:     rtok,
 			RefreshExpiresAt: rexp,
-			User: userResp{
+			User: UserResp{
 				ID:          u.ID,
 				Username:    u.Username,
 				Email:       u.Email,
@@ -138,6 +161,14 @@ func (h Auth) Login() http.Handler {
 	})
 }
 
+// Me godoc
+// @Summary Get current user
+// @Tags auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} UserResp
+// @Failure 401 {object} ErrorEnvelope
+// @Router /v1/auth/me [get]
 func (h Auth) Me() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -149,7 +180,7 @@ func (h Auth) Me() http.Handler {
 			writeError(w, http.StatusUnauthorized, "unauthorized", "authentication required")
 			return
 		}
-		resp := userResp{
+		resp := UserResp{
 			ID:          u.ID,
 			Username:    u.Username,
 			Email:       u.Email,
@@ -162,18 +193,30 @@ func (h Auth) Me() http.Handler {
 	})
 }
 
-type refreshReq struct {
+type RefreshReq struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-type refreshResp struct {
+type RefreshResp struct {
 	Token            string    `json:"token"`
 	ExpiresAt        time.Time `json:"expires_at"`
 	RefreshToken     string    `json:"refresh_token"`
 	RefreshExpiresAt time.Time `json:"refresh_expires_at"`
-	User             userResp  `json:"user"`
+	User             UserResp  `json:"user"`
 }
 
+// Refresh godoc
+// @Summary Refresh access token
+// @Description Exchange refresh token for a new access token (rotation)
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body RefreshReq true "Refresh request"
+// @Success 200 {object} RefreshResp
+// @Failure 400 {object} ErrorEnvelope
+// @Failure 401 {object} ErrorEnvelope
+// @Failure 500 {object} ErrorEnvelope
+// @Router /v1/auth/refresh [post]
 func (h Auth) Refresh() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -185,7 +228,7 @@ func (h Auth) Refresh() http.Handler {
 		dec := json.NewDecoder(io.LimitReader(r.Body, h.MaxBodyBytes))
 		dec.DisallowUnknownFields()
 
-		var req refreshReq
+		var req RefreshReq
 		if err := dec.Decode(&req); err != nil {
 			writeError(w, http.StatusBadRequest, "bad_request", "invalid JSON payload")
 			return
@@ -201,12 +244,12 @@ func (h Auth) Refresh() http.Handler {
 			return
 		}
 
-		resp := refreshResp{
+		resp := RefreshResp{
 			Token:            atok,
 			ExpiresAt:        aexp,
 			RefreshToken:     rtok,
 			RefreshExpiresAt: rexp,
-			User: userResp{
+			User: UserResp{
 				ID:          u.ID,
 				Username:    u.Username,
 				Email:       u.Email,

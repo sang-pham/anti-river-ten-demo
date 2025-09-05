@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type errorEnvelope struct {
+type ErrorEnvelope struct {
 	Error struct {
 		Code    string `json:"code"`
 		Message string `json:"message"`
@@ -15,7 +15,7 @@ type errorEnvelope struct {
 func writeError(w http.ResponseWriter, code int, errCode, msg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	var env errorEnvelope
+	var env ErrorEnvelope
 	env.Error.Code = errCode
 	env.Error.Message = msg
 	_ = json.NewEncoder(w).Encode(env)

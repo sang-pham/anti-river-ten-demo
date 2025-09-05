@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: build run test tidy fmt vet
+.PHONY: build run test tidy fmt vet swagger
 
 build:
 	go build ./...
@@ -19,3 +19,8 @@ fmt:
 
 vet:
 	go vet ./...
+
+
+# Generate Swagger/OpenAPI docs into ./docs (requires swag CLI)
+swagger:
+	swag init -g cmd/api/main.go -o docs

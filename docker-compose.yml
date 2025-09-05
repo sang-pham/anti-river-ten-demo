@@ -31,6 +31,7 @@ services:
       REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-30s}
       MAX_BODY_BYTES: ${MAX_BODY_BYTES:-1048576}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      APP_ENV: ${APP_ENV:-development}
       # Use the postgres service hostname inside the compose network
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/go_demo?sslmode=disable}
       JWT_SECRET: ${JWT_SECRET:-agrcKBGjR3HfmSJUzuUfZ9WJoLSLsdfi8Y/lAFeCnAM=}

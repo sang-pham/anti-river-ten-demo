@@ -1,3 +1,11 @@
+// @title go-demo API
+// @version 1.0
+// @description REST API demo with auth
+// @BasePath /
+// @schemes http
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 package main
 
 import (
@@ -6,6 +14,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	_ "go-demo/docs"
 
 	"go-demo/internal/auth"
 	"go-demo/internal/config"
