@@ -33,3 +33,38 @@ func (r *Repository) InsertBatch(ctx context.Context, entries []SQLLog) error {
 	}
 	return r.db.WithContext(ctx).CreateInBatches(entries, 500).Error
 }
+
+// Abnormal thresholds as per requirement
+const (
+	AbnormalExecTimeThreshold  int64 = 500
+	AbnormalExecCountThreshold int64 = 100
+)
+
+// CountAbnormal returns the total number of abnormal queries
+// defined by exec_time_ms > 500 AND exec_count > 100.
+func (r *Repository) CountAbnormal(ctx context.Context) (int64, error) {
+	var cnt int64
+	err := r.db.WithContext(ctx).
+		Model(&SQLLog{}).
+		Where("exec_time_ms > ? AND exec_count > ?", AbnormalExecTimeThreshold, AbnormalExecCountThreshold).
+		Count(&cnt).Error
+	return cnt, err
+}
+
+// ListAbnormal returns up to 'limit' abnormal queries ordered by
+// exec_time_ms DESC, exec_count DESC. Limit is clamped to [1,1000] with default 100.
+func (r *Repository) ListAbnormal(ctx context.Context, limit int) ([]SQLLog, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+	var items []SQLLog
+	err := r.db.WithContext(ctx).
+		Where("exec_time_ms > ? AND exec_count > ?", AbnormalExecTimeThreshold, AbnormalExecCountThreshold).
+		Order("exec_time_ms DESC, exec_count DESC").
+		Limit(limit).
+		Find(&items).Error
+	return items, err
+}

@@ -58,6 +58,17 @@ func NewRouter(cfg config.Config, log *slog.Logger, authSvc *auth.Service, sqlLo
 		up := handlers.NewSQLLogUpload(sqlLogRepo, log, cfg.MaxBodyBytes)
 		mux.Handle("POST /v1/sql-logs/upload", up.Upload())
 	}
+		// SQL log scan endpoint (authenticated)
+		if authSvc != nil && sqlLogRepo != nil {
+			scan := handlers.NewSQLLogScan(sqlLogRepo, log)
+			// Support both GET (manual/curl) and POST (UI actions) to avoid 404 when UI uses POST
+			mux.Handle("GET /v1/sql-logs/scan", handlers.RequireAuth(authSvc)(scan.Scan()))
+			mux.Handle("POST /v1/sql-logs/scan", handlers.RequireAuth(authSvc)(scan.Scan()))
+			// Handle CORS preflight even when ALLOWED_ORIGINS is empty (returns 204)
+			mux.Handle("OPTIONS /v1/sql-logs/scan", nhttp.HandlerFunc(func(w nhttp.ResponseWriter, r *nhttp.Request) {
+				w.WriteHeader(nhttp.StatusNoContent)
+			}))
+		}
 
 	// Compose middleware (order matters; first is outermost)
 	return chain(mux,
