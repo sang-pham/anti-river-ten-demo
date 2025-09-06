@@ -11,6 +11,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -60,6 +61,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	// On startup: parse logfile/logsql.txt if present; log parsing errors and continue with valid entries
+	if err := loadSQLLogOnStartup(context.Background(), sqlRepo, log, "logfile/logsql.txt"); err != nil {
+		log.Error("startup sql log load failed", "err", err)
+	}
+
 	// Router and server
 	router := apihttp.NewRouter(cfg, log, authSvc, sqlRepo)
 	server := apihttp.NewServer(cfg, router, log)
@@ -74,4 +80,40 @@ func main() {
 	}
 
 	log.Info("server exited cleanly")
+}
+
+func loadSQLLogOnStartup(ctx context.Context, repo *sqllog.Repository, log *slog.Logger, path string) error {
+	
+	f, err := os.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Info("startup sql log file not found", "path", path)
+			return nil
+		}
+		return err
+	}
+	defer func() { _ = f.Close() }()
+
+	var entries []sqllog.SQLLog
+	var skipped int
+	err = sqllog.ParseStream(ctx, f,
+		func(rec sqllog.SQLLog) error {
+			entries = append(entries, rec)
+			return nil
+		},
+		func(perr error) {
+			skipped++
+			log.Warn("sqllog parse error", "err", perr.Error())
+		},
+	)
+	if err != nil && !errors.Is(err, context.Canceled) {
+		return err
+	}
+	if len(entries) > 0 {
+		if err := repo.InsertBatch(ctx, entries); err != nil {
+			return err
+		}
+	}
+	log.Info("startup sql log processed", "inserted", len(entries), "skipped", skipped, "path", path)
+	return nil
 }
