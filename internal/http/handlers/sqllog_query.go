@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"regexp"
+	"strings"
 
 	"log/slog"
 
@@ -51,6 +53,11 @@ type sqlLogItem struct {
 // @Success 200 {object} ListDatabasesResponse
 // @Failure 500 {object} ErrorEnvelope
 // @Router /v1/sql-logs/databases [get]
+// Strict DB name allowlist: 1-128 chars, letters/digits/underscore/dot/hyphen
+var dbNameRE = regexp.MustCompile(`^[A-Za-z0-9_.-]{1,128}$`)
+
+// ListDatabases handles GET /v1/sql-logs/databases
+// Returns: { "databases": ["db1","db2", ...] }
 func (h *SQLLogQuery) ListDatabases() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if h.repo == nil {
@@ -63,8 +70,18 @@ func (h *SQLLogQuery) ListDatabases() http.Handler {
 			h.log.Error("list databases failed", "err", err)
 			return
 		}
+		// Filter unsafe names to avoid propagating HTML/script-like values
+		safe := make([]string, 0, len(names))
+		for _, n := range names {
+			trim := strings.TrimSpace(n)
+			if dbNameRE.MatchString(trim) {
+				safe = append(safe, trim)
+			} else {
+				h.log.Warn("dropping unsafe db name", "value", n)
+			}
+		}
 		writeJSON(w, http.StatusOK, map[string]any{
-			"databases": names,
+			"databases": safe,
 		})
 	})
 }
@@ -85,11 +102,16 @@ func (h *SQLLogQuery) ListByDB() http.Handler {
 			writeError(w, http.StatusInternalServerError, "internal_error", "repository not configured")
 			return
 		}
-		dbName := r.URL.Query().Get("db")
+		dbName := strings.TrimSpace(r.URL.Query().Get("db"))
 		if dbName == "" {
 			writeError(w, http.StatusBadRequest, "bad_request", "missing db parameter")
 			return
 		}
+		if !dbNameRE.MatchString(dbName) {
+			writeError(w, http.StatusBadRequest, "bad_request", "invalid db parameter; allowed [A-Za-z0-9_.-], max length 128")
+			return
+		}
+
 		rows, err := h.repo.FindByDB(r.Context(), dbName)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal_error", "failed to query logs")
