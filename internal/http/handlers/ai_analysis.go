@@ -7,6 +7,8 @@ import (
 	"log/slog"
 	"net/http"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 
 	"go-demo/internal/config"
@@ -72,8 +74,25 @@ func (h *AIAnalysisHandler) AIAnalysis() http.HandlerFunc {
 			return
 		}
 
+		limit := r.URL.Query().Get("limit")
+		if limit == "" {
+			limit = "5"
+		}
+
 		// Query slow queries from database
 		queries, err := h.repo.FindSlowQueries(r.Context(), dbName)
+
+		limit_, err := strconv.Atoi(limit)
+		if err != nil || limit_ <= 0 {
+			limit_ = 5
+		}
+		if len(queries) > limit_ {
+			// Limit to top N by exec_time_ms
+			sort.Slice(queries, func(i, j int) bool {
+				return queries[i].ExecTimeMs > queries[j].ExecTimeMs
+			})
+			queries = queries[:limit_]
+		}
 		if err != nil {
 			h.log.Error("Failed to query slow queries", "error", err, "db_name", dbName)
 			h.writeErrorResponse(w, http.StatusInternalServerError, "Failed to query database")
@@ -122,6 +141,7 @@ Continue analysis the query to identify potential performance improvements.
 If the query cannot be analyzed to provide suggestions, return: "Recommendation: manual review required".
 Apply these rules to any SQL statement I provide.
 
+Limit answer to 100 words.
 Query to analyze:
 %s`, sqlQuery)
 
