@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -38,6 +39,8 @@ func NewSQLLogReport(repo *sqllog.Repository, log *slog.Logger, maxBodyBytes int
 // @Param freq_slow_ms query int false "Frequent+slow time threshold in ms"
 // @Param freq_count query int false "Frequent count threshold"
 // @Param cap query int false "Hard cap upper bound for anomalies count"
+// @Param pcts query string false "Comma separated percentiles in 0..100. Default 50,75,90,95,99"
+// @Param top_patterns query int false "Top query patterns count. Default 20, min 1, max 200"
 // @Success 200 {object} sqllog.ReportData
 // @Failure 400 {object} ErrorEnvelope
 // @Failure 500 {object} ErrorEnvelope
@@ -77,6 +80,8 @@ func (h *SQLLogReport) ReportJSON() http.Handler {
 // @Param freq_slow_ms query int false "Frequent+slow time threshold in ms"
 // @Param freq_count query int false "Frequent count threshold"
 // @Param cap query int false "Hard cap upper bound for anomalies count"
+// @Param pcts query string false "Comma separated percentiles in 0..100. Default 50,75,90,95,99"
+// @Param top_patterns query int false "Top query patterns count. Default 20, min 1, max 200"
 // @Success 200 {string} string "CSV content"
 // @Failure 400 {object} ErrorEnvelope
 // @Failure 500 {object} ErrorEnvelope
@@ -125,6 +130,8 @@ func (h *SQLLogReport) ReportCSV() http.Handler {
 // @Param freq_slow_ms query int false "Frequent+slow time threshold in ms"
 // @Param freq_count query int false "Frequent count threshold"
 // @Param cap query int false "Hard cap upper bound for anomalies count"
+// @Param pcts query string false "Comma separated percentiles in 0..100. Default 50,75,90,95,99"
+// @Param top_patterns query int false "Top query patterns count. Default 20, min 1, max 200"
 // @Success 200 {string} string "PDF content"
 // @Failure 400 {object} ErrorEnvelope
 // @Failure 500 {object} ErrorEnvelope
@@ -179,6 +186,10 @@ func parseReportFilter(r *http.Request) (sqllog.ReportFilter, error) {
 	freqCountStr := strings.TrimSpace(q.Get("freq_count"))
 	capStr := strings.TrimSpace(q.Get("cap"))
 
+	// Extended stats params
+	pctsStr := strings.TrimSpace(q.Get("pcts"))
+	topPatternsStr := strings.TrimSpace(q.Get("top_patterns"))
+
 	from := df.From
 	to := df.To
 
@@ -207,14 +218,16 @@ func parseReportFilter(r *http.Request) (sqllog.ReportFilter, error) {
 
 	// Start with defaults then apply overrides if valid
 	f := sqllog.ReportFilter{
-		From:       from,
-		To:         to,
-		DB:         db,
-		Limit:      limit,
-		SlowMs:     df.SlowMs,
-		FreqSlowMs: df.FreqSlowMs,
-		FreqCount:  df.FreqCount,
-		MaxCap:     df.MaxCap,
+		From:        from,
+		To:          to,
+		DB:          db,
+		Limit:       limit,
+		SlowMs:      df.SlowMs,
+		FreqSlowMs:  df.FreqSlowMs,
+		FreqCount:   df.FreqCount,
+		MaxCap:      df.MaxCap,
+		Pcts:        df.Pcts,
+		TopPatterns: df.TopPatterns,
 	}
 
 	if slowMsStr != "" {
@@ -235,6 +248,30 @@ func parseReportFilter(r *http.Request) (sqllog.ReportFilter, error) {
 	if capStr != "" {
 		if v, e := strconv.Atoi(capStr); e == nil && v > 0 {
 			f.MaxCap = v
+		}
+	}
+
+	// Extended overrides
+	if pctsStr != "" {
+		pcts, perr := parsePercentiles(pctsStr)
+		if perr != nil {
+			return sqllog.ReportFilter{}, fmt.Errorf("invalid 'pcts': %v", perr)
+		}
+		if len(pcts) > 0 {
+			f.Pcts = pcts
+		}
+	}
+	if topPatternsStr != "" {
+		if v, e := strconv.Atoi(topPatternsStr); e == nil {
+			if v < 1 {
+				v = 1
+			}
+			if v > 200 {
+				v = 200
+			}
+			f.TopPatterns = v
+		} else {
+			return sqllog.ReportFilter{}, fmt.Errorf("invalid 'top_patterns'")
 		}
 	}
 
@@ -262,4 +299,46 @@ func buildFilename(ext string) string {
 	now := time.Now().In(loc)
 	stamp := now.Format("20060102-1504")
 	return fmt.Sprintf("sql-report-%s.%s", stamp, ext)
+}
+
+// parsePercentiles parses a comma-separated list of integers in [0..100]
+// and returns sorted unique fractions in [0..1]. It caps the count at 10.
+// Returns error if no valid values are provided.
+func parsePercentiles(s string) ([]float64, error) {
+	if strings.TrimSpace(s) == "" {
+		return nil, fmt.Errorf("empty")
+	}
+	parts := strings.Split(s, ",")
+	seen := make(map[int]struct{}, len(parts))
+	ints := make([]int, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		n, err := strconv.Atoi(p)
+		if err != nil {
+			return nil, fmt.Errorf("non-integer %q", p)
+		}
+		if n < 0 || n > 100 {
+			return nil, fmt.Errorf("out of range %d", n)
+		}
+		if _, ok := seen[n]; ok {
+			continue
+		}
+		seen[n] = struct{}{}
+		ints = append(ints, n)
+	}
+	if len(ints) == 0 {
+		return nil, fmt.Errorf("no valid values")
+	}
+	sort.Ints(ints)
+	if len(ints) > 10 {
+		ints = ints[:10]
+	}
+	out := make([]float64, len(ints))
+	for i, v := range ints {
+		out[i] = float64(v) / 100.0
+	}
+	return out, nil
 }
