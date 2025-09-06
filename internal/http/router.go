@@ -64,6 +64,12 @@ func NewRouter(cfg config.Config, log *slog.Logger, authSvc *auth.Service, sqlLo
 		mux.Handle("GET /v1/sql-logs", q.ListByDB())
 	}
 
+	// AI analysis endpoint
+	if sqlLogRepo != nil {
+		ai := handlers.NewAIAnalysisHandler(sqlLogRepo, log, cfg)
+		mux.Handle("GET /v1/ai-analysis", ai.AIAnalysis())
+	}
+
 	// Compose middleware (order matters; first is outermost)
 	return chain(mux,
 		withRequestID,
