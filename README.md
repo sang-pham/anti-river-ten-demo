@@ -137,6 +137,58 @@ Development notes
   - go build ./... and go run ./cmd/api
   - docker compose up -d --build
 
+## Running Tests
+
+This project includes comprehensive unit tests for handlers and other components.
+
+### Quick Start
+
+```bash
+# Run all tests
+make test
+
+# Or directly with go
+go test ./... -race
+```
+
+### Test Options
+
+```bash
+# Run tests with verbose output
+go test ./... -v -race
+
+# Run tests in a specific package
+go test ./internal/http/handlers -v
+
+# Run a specific test function
+go test ./internal/http/handlers -run TestHealthHandler -v
+
+# Run tests with coverage report
+go test ./... -cover -race
+
+# Generate detailed coverage report
+go test ./... -coverprofile=coverage.out -race
+go tool cover -html=coverage.out -o coverage.html
+
+# Build test binaries (useful for debugging)
+go test -c ./internal/http/handlers
+```
+
+### Available Test Suites
+
+- **Health handlers**: `internal/http/handlers/health_test.go`
+- **Auth handlers**: `internal/http/handlers/auth_test.go`
+- **SQL log handlers**: `internal/http/handlers/sqllog_test.go`
+- **AI analysis handlers**: `internal/http/handlers/ai_analysis_test.go`
+
+### Test Environment
+
+Tests use in-memory or mock databases where appropriate. No additional setup is required beyond having Go installed.
+
+### Continuous Integration
+
+Tests run with race detection enabled (`-race` flag) to catch potential concurrency issues.
+
 References
 
 - docs/architecture.md
