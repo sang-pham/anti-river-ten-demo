@@ -20,6 +20,9 @@ type Config struct {
 	JWTSecret   string
 	JWTTTL      time.Duration
 	RefreshTTL  time.Duration
+
+	// OpenAI
+	OpenAIAPIKey string
 }
 
 func FromEnv() (Config, error) {
@@ -35,6 +38,8 @@ func FromEnv() (Config, error) {
 		JWTSecret:   getenv("JWT_SECRET", ""),
 		JWTTTL:      parseDuration(getenv("JWT_TTL", "24h"), 24*time.Hour),
 		RefreshTTL:  parseDuration(getenv("REFRESH_TTL", "720h"), 720*time.Hour), // 30 days
+
+		OpenAIAPIKey: getenv("OPENAI_API_KEY", ""),
 	}
 
 	// Default to permissive CORS in non-production if not explicitly configured.

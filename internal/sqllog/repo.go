@@ -86,3 +86,29 @@ func (r *Repository) FindByDB(ctx context.Context, dbName string) ([]SQLLog, err
 	return rows, err
 >>>>>>> 76a03c880db0a9939c6c79b52d089061b1908538
 }
+
+// FindSlowQueries returns SQL queries that are slow and frequently executed
+func (r *Repository) FindSlowQueries(ctx context.Context, dbName string) ([]SQLLog, error) {
+	var results []SQLLog
+	err := r.db.WithContext(ctx).
+		Where("db_name = ? AND exec_time_ms > ? AND exec_count > ?", dbName, 500, 100).
+		Find(&results).Error
+	return results, err
+}
+
+// ListDatabases returns distinct database names present in the log table.
+func (r *Repository) ListDatabases(ctx context.Context) ([]string, error) {
+	var names []string
+	err := r.db.WithContext(ctx).Model(&SQLLog{}).Distinct().Pluck("db_name", &names).Error
+	return names, err
+}
+
+// FindByDB returns all SQL log entries for a specific database.
+func (r *Repository) FindByDB(ctx context.Context, dbName string) ([]SQLLog, error) {
+	var rows []SQLLog
+	err := r.db.WithContext(ctx).
+		Where("db_name = ?", dbName).
+		Order("created_at DESC, id DESC").
+		Find(&rows).Error
+	return rows, err
+}

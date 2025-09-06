@@ -47,6 +47,112 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/admin/users": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new user with specified role (ADMIN role required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create user (Admin only)",
+                "parameters": [
+                    {
+                        "description": "Create user request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.CreateUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/ai-analysis": {
+            "get": {
+                "tags": [
+                    "ai"
+                ],
+                "summary": "AI analysis endpoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Database name",
+                        "name": "db_name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AnalysisResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AnalysisResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.AnalysisResult"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/auth/login": {
             "post": {
                 "description": "Login with username or email",
@@ -231,9 +337,154 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/v1/sql-logs/databases": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "List databases with SQL logs",
+                "description": "Returns distinct database names that have SQL log entries.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ListDatabasesResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/sql-logs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "List SQL queries by database",
+                "description": "Provide database name via query parameter \"db\" to list its SQL queries.",
+                "parameters": [
+                    {
+                        "name": "db",
+                        "in": "query",
+                        "required": true,
+                        "type": "string",
+                        "description": "Database name"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ListByDBResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/sql-logs/upload": {
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "Upload SQL log file",
+                "description": "Accepts multipart/form-data with field \"file\" (.log or .txt), parses valid entries and stores them; malformed lines are reported.",
+                "parameters": [
+                    {
+                        "name": "file",
+                        "in": "formData",
+                        "required": true,
+                        "type": "file",
+                        "description": "logsql.txt"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UploadResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "handlers.AnalysisResult": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.QueryAnalysis"
+                    }
+                },
+                "error": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.CreateUserReq": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.ErrorEnvelope": {
             "type": "object",
             "properties": {
@@ -279,6 +530,26 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/handlers.UserResp"
+                }
+            }
+        },
+        "handlers.QueryAnalysis": {
+            "type": "object",
+            "properties": {
+                "exec_count": {
+                    "type": "integer"
+                },
+                "exec_time_ms": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "sql_query": {
+                    "type": "string"
+                },
+                "suggestions": {
+                    "type": "string"
                 }
             }
         },
@@ -346,6 +617,79 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.ListDatabasesResponse": {
+            "type": "object",
+            "properties": {
+                "databases": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "handlers.SQLLogItem": {
+            "type": "object",
+            "properties": {
+                "sql_query": {
+                    "type": "string"
+                },
+                "exec_time_ms": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "exec_count": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "handlers.ListByDBResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.SQLLogItem"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UploadResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "total_lines": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "inserted": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "skipped": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "content_type": {
+                    "type": "string"
+                },
+                "filename": {
                     "type": "string"
                 }
             }
