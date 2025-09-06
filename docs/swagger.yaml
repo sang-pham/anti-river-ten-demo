@@ -1,5 +1,27 @@
 basePath: /
 definitions:
+  handlers.AnalysisResult:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/handlers.QueryAnalysis'
+        type: array
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  handlers.CreateUserReq:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
   handlers.ErrorEnvelope:
     properties:
       error:
@@ -30,6 +52,19 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/handlers.UserResp'
+    type: object
+  handlers.QueryAnalysis:
+    properties:
+      exec_count:
+        type: integer
+      exec_time_ms:
+        type: integer
+      id:
+        type: integer
+      sql_query:
+        type: string
+      suggestions:
+        type: string
     type: object
   handlers.RefreshReq:
     properties:
@@ -150,6 +185,74 @@ paths:
       summary: Readiness probe
       tags:
       - platform
+  /v1/admin/users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with specified role (ADMIN role required)
+      parameters:
+      - description: Create user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreateUserReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handlers.UserResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Create user (Admin only)
+      tags:
+      - admin
+  /v1/ai-analysis:
+    get:
+      parameters:
+      - description: Database name
+        in: query
+        name: db_name
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.AnalysisResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.AnalysisResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.AnalysisResult'
+      summary: AI analysis endpoint
+      tags:
+      - ai
   /v1/auth/login:
     post:
       consumes:
