@@ -22,6 +22,7 @@ import (
 	"go-demo/internal/db"
 	apihttp "go-demo/internal/http"
 	"go-demo/internal/observability"
+	"go-demo/internal/sqllog"
 )
 
 func main() {
@@ -52,8 +53,15 @@ func main() {
 
 	authSvc := auth.NewService(dbx, cfg, log)
 
+	// Initialize sql log repository and migrate table
+	sqlRepo := sqllog.NewRepository(dbx.Gorm)
+	if err := sqlRepo.Migrate(context.Background()); err != nil {
+		log.Error("sql log migration failed", "err", err)
+		os.Exit(1)
+	}
+
 	// Router and server
-	router := apihttp.NewRouter(cfg, log, authSvc)
+	router := apihttp.NewRouter(cfg, log, authSvc, sqlRepo)
 	server := apihttp.NewServer(cfg, router, log)
 
 	// Run with signal cancellation
