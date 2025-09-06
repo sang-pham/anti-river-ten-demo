@@ -51,6 +51,11 @@ func NewRouter(cfg config.Config, log *slog.Logger, authSvc *auth.Service, sqlLo
 	if sqlLogRepo != nil {
 		up := handlers.NewSQLLogUpload(sqlLogRepo, log, cfg.MaxBodyBytes)
 		mux.Handle("POST /v1/sql-logs/upload", up.Upload())
+
+		// SQL log query endpoints
+		q := handlers.NewSQLLogQuery(sqlLogRepo, log)
+		mux.Handle("GET /v1/sql-logs/databases", q.ListDatabases())
+		mux.Handle("GET /v1/sql-logs", q.ListByDB())
 	}
 
 	// Compose middleware (order matters; first is outermost)

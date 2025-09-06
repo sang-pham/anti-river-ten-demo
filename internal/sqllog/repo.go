@@ -33,3 +33,20 @@ func (r *Repository) InsertBatch(ctx context.Context, entries []SQLLog) error {
 	}
 	return r.db.WithContext(ctx).CreateInBatches(entries, 500).Error
 }
+
+// ListDatabases returns distinct database names present in the log table.
+func (r *Repository) ListDatabases(ctx context.Context) ([]string, error) {
+	var names []string
+	err := r.db.WithContext(ctx).Model(&SQLLog{}).Distinct().Pluck("db_name", &names).Error
+	return names, err
+}
+
+// FindByDB returns all SQL log entries for a specific database.
+func (r *Repository) FindByDB(ctx context.Context, dbName string) ([]SQLLog, error) {
+	var rows []SQLLog
+	err := r.db.WithContext(ctx).
+		Where("db_name = ?", dbName).
+		Order("created_at DESC, id DESC").
+		Find(&rows).Error
+	return rows, err
+}
