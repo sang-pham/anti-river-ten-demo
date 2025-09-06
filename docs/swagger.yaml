@@ -32,6 +32,28 @@ definitions:
             type: string
         type: object
     type: object
+  handlers.ListByDBResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handlers.SQLLogItem'
+        type: array
+      message:
+        type: string
+    type: object
+  handlers.ListUsersResp:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/handlers.UserResp'
+        type: array
+    type: object
   handlers.LoginReq:
     properties:
       identifier:
@@ -93,6 +115,44 @@ definitions:
       username:
         type: string
     type: object
+  handlers.SQLLogItem:
+    properties:
+      exec_count:
+        type: integer
+      exec_time_ms:
+        type: integer
+      sql_query:
+        type: string
+    type: object
+  handlers.UpdateUserRoleReq:
+    properties:
+      role:
+        type: string
+    type: object
+  handlers.UpdateUserStatusReq:
+    properties:
+      active:
+        type: boolean
+    type: object
+  handlers.UploadResponse:
+    properties:
+      content_type:
+        type: string
+      errors:
+        items:
+          type: string
+        type: array
+      filename:
+        type: string
+      inserted:
+        type: integer
+      message:
+        type: string
+      skipped:
+        type: integer
+      total_lines:
+        type: integer
+    type: object
   handlers.UserResp:
     properties:
       created_by:
@@ -110,54 +170,92 @@ definitions:
       username:
         type: string
     type: object
-  handlers.ListDatabasesResponse:
+  sqllog.AnomalyDetail:
     properties:
-      databases:
+      db_name:
+        type: string
+      exec_count:
+        type: integer
+      exec_time_ms:
+        type: integer
+      reasons:
         items:
           type: string
         type: array
-    type: object
-  handlers.SQLLogItem:
-    properties:
       sql_query:
         type: string
-      exec_time_ms:
-        format: int64
-        type: integer
-      exec_count:
-        format: int64
-        type: integer
-    type: object
-  handlers.ListByDBResponse:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/handlers.SQLLogItem'
-        type: array
-      message:
-        type: string
-    type: object
-  handlers.UploadResponse:
-    properties:
-      message:
-        type: string
-      total_lines:
-        format: int32
-        type: integer
-      inserted:
-        format: int32
-        type: integer
-      skipped:
-        format: int32
-        type: integer
-      errors:
+      suggestions:
         items:
           type: string
         type: array
-      content_type:
+    type: object
+  sqllog.PatternStat:
+    properties:
+      occurrences:
+        type: integer
+      pattern:
         type: string
-      filename:
+    type: object
+  sqllog.PercentileSet:
+    additionalProperties:
+      format: float64
+      type: number
+    type: object
+  sqllog.Percentiles:
+    properties:
+      exec_count:
+        $ref: '#/definitions/sqllog.PercentileSet'
+      exec_time_ms:
+        $ref: '#/definitions/sqllog.PercentileSet'
+    type: object
+  sqllog.ReportData:
+    properties:
+      anomalies:
+        items:
+          $ref: '#/definitions/sqllog.AnomalyDetail'
+        type: array
+      generated_at:
         type: string
+      percentiles_by_db:
+        additionalProperties:
+          $ref: '#/definitions/sqllog.Percentiles'
+        type: object
+      percentiles_overall:
+        allOf:
+        - $ref: '#/definitions/sqllog.Percentiles'
+        description: Extended statistics
+      summary:
+        $ref: '#/definitions/sqllog.ReportSummary'
+      timezone:
+        type: string
+      top_patterns_by_db:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/sqllog.PatternStat'
+          type: array
+        type: object
+      top_patterns_overall:
+        items:
+          $ref: '#/definitions/sqllog.PatternStat'
+        type: array
+    type: object
+  sqllog.ReportSummary:
+    properties:
+      anomaly_count:
+        type: integer
+      by_db:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+      from:
+        type: string
+      suggestion_count:
+        type: integer
+      to:
+        type: string
+      total_queries:
+        type: integer
     type: object
 info:
   contact: {}
@@ -186,6 +284,47 @@ paths:
       tags:
       - platform
   /v1/admin/users:
+    get:
+      description: Get a paginated list of all users (ADMIN role required)
+      parameters:
+      - default: 20
+        description: Number of users to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of users to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ListUsersResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: List users (Admin only)
+      tags:
+      - admin
     post:
       consumes:
       - application/json
@@ -229,6 +368,143 @@ paths:
       summary: Create user (Admin only)
       tags:
       - admin
+  /v1/admin/users/{id}:
+    delete:
+      description: Soft delete a user (ADMIN role required)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User deleted successfully
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Delete user (Admin only)
+      tags:
+      - admin
+  /v1/admin/users/{id}/role:
+    put:
+      consumes:
+      - application/json
+      description: Update a user's role (ADMIN role required)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update role request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateUserRoleReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Update user role (Admin only)
+      tags:
+      - admin
+  /v1/admin/users/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Activate or deactivate a user (ADMIN role required)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update status request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateUserStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UserResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: Activate/Deactivate user (Admin only)
+      tags:
+      - admin
   /v1/ai-analysis:
     get:
       parameters:
@@ -237,6 +513,11 @@ paths:
         name: db_name
         required: true
         type: string
+      - description: 'Maximum number of queries to analyze (default: 5)'
+        in: query
+        minimum: 1
+        name: limit
+        type: integer
       responses:
         "200":
           description: OK
@@ -372,40 +653,18 @@ paths:
       summary: Register user
       tags:
       - auth
-  /v1/sql-logs/databases:
-    get:
-      produces:
-      - application/json
-      security:
-      - BearerAuth: []
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.ListDatabasesResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handlers.ErrorEnvelope'
-      summary: List databases with SQL logs
-      description: Returns distinct database names that have SQL log entries.
-      tags:
-      - sql-logs
   /v1/sql-logs:
     get:
-      produces:
-      - application/json
-      security:
-      - BearerAuth: []
+      description: Provide database name via query parameter "db" to list its SQL
+        queries.
       parameters:
-      - name: db
+      - description: Database name
         in: query
+        name: db
         required: true
         type: string
-        description: Database name
-        minLength: 1
-        maxLength: 128
-        pattern: '^[A-Za-z0-9_.-]{1,128}$'
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -420,21 +679,270 @@ paths:
           schema:
             $ref: '#/definitions/handlers.ErrorEnvelope'
       summary: List SQL queries by database
-      description: Provide database name via query parameter "db" to list its SQL queries.
+      tags:
+      - sql-logs
+  /v1/sql-logs/report:
+    get:
+      description: 'Aggregated anomalies and metrics within a time range. Defaults:
+        last 7 days. Thresholds: slow_ms >= 1000 OR (exec_time_ms >= 500 AND exec_count
+        >= 100).'
+      parameters:
+      - description: Start time (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: End time (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      - description: Filter by database name
+        in: query
+        name: db
+        type: string
+      - default: 500
+        description: Max anomalies to return
+        in: query
+        maximum: 5000
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Slow threshold in ms
+        in: query
+        name: slow_ms
+        type: integer
+      - description: Frequent+slow time threshold in ms
+        in: query
+        name: freq_slow_ms
+        type: integer
+      - description: Frequent count threshold
+        in: query
+        name: freq_count
+        type: integer
+      - description: Hard cap upper bound for anomalies count
+        in: query
+        name: cap
+        type: integer
+      - description: Comma separated percentiles in 0..100. Default 50,75,90,95,99
+        in: query
+        name: pcts
+        type: string
+      - description: Top query patterns count. Default 20, min 1, max 200
+        in: query
+        name: top_patterns
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/sqllog.ReportData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: SQL log report (JSON)
+      tags:
+      - sql-logs
+  /v1/sql-logs/report.csv:
+    get:
+      description: Download the aggregated report as CSV.
+      parameters:
+      - description: Start time (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: End time (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      - description: Filter by database name
+        in: query
+        name: db
+        type: string
+      - default: 500
+        description: Max anomalies to return
+        in: query
+        maximum: 5000
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Slow threshold in ms
+        in: query
+        name: slow_ms
+        type: integer
+      - description: Frequent+slow time threshold in ms
+        in: query
+        name: freq_slow_ms
+        type: integer
+      - description: Frequent count threshold
+        in: query
+        name: freq_count
+        type: integer
+      - description: Hard cap upper bound for anomalies count
+        in: query
+        name: cap
+        type: integer
+      - description: Comma separated percentiles in 0..100. Default 50,75,90,95,99
+        in: query
+        name: pcts
+        type: string
+      - description: Top query patterns count. Default 20, min 1, max 200
+        in: query
+        name: top_patterns
+        type: integer
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: CSV content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: SQL log report (CSV)
+      tags:
+      - sql-logs
+  /v1/sql-logs/report.pdf:
+    get:
+      description: Download the aggregated report as PDF.
+      parameters:
+      - description: Start time (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: End time (RFC3339 or YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      - description: Filter by database name
+        in: query
+        name: db
+        type: string
+      - default: 500
+        description: Max anomalies to return
+        in: query
+        maximum: 5000
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Slow threshold in ms
+        in: query
+        name: slow_ms
+        type: integer
+      - description: Frequent+slow time threshold in ms
+        in: query
+        name: freq_slow_ms
+        type: integer
+      - description: Frequent count threshold
+        in: query
+        name: freq_count
+        type: integer
+      - description: Hard cap upper bound for anomalies count
+        in: query
+        name: cap
+        type: integer
+      - description: Comma separated percentiles in 0..100. Default 50,75,90,95,99
+        in: query
+        name: pcts
+        type: string
+      - description: Top query patterns count. Default 20, min 1, max 200
+        in: query
+        name: top_patterns
+        type: integer
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: PDF content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      security:
+      - BearerAuth: []
+      summary: SQL log report (PDF)
+      tags:
+      - sql-logs
+  /v1/sql-logs/scan:
+    get:
+      description: 'Apply rule: exec_time_ms > threshold AND exec_count > threshold
+        (defaults: 500ms, 100). Thresholds can be overridden via query params.'
+      parameters:
+      - default: 100
+        description: Maximum number of items to return
+        in: query
+        maximum: 1000
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Database name to filter results
+        in: query
+        name: dbName
+        type: string
+      - default: 500
+        description: Minimum exec_time_ms to be considered abnormal
+        in: query
+        name: exec_time_ms
+        type: integer
+      - default: 100
+        description: Minimum exec_count to be considered abnormal
+        in: query
+        name: exec_count
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      summary: Scan for abnormal SQL queries
       tags:
       - sql-logs
   /v1/sql-logs/upload:
     post:
       consumes:
       - multipart/form-data
-      produces:
-      - application/json
+      description: Accepts multipart/form-data with field "file" (.log or .txt), parses
+        valid entries and stores them; malformed lines are reported.
       parameters:
-      - name: file
+      - description: logsql.txt
         in: formData
+        name: file
         required: true
         type: file
-        description: logsql.txt
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -449,7 +957,6 @@ paths:
           schema:
             $ref: '#/definitions/handlers.ErrorEnvelope'
       summary: Upload SQL log file
-      description: Accepts multipart/form-data with field "file" (.log or .txt), parses valid entries and stores them; malformed lines are reported.
       tags:
       - sql-logs
 schemes:

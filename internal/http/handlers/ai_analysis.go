@@ -62,6 +62,7 @@ type QueryAnalysis struct {
 // @Summary AI analysis endpoint
 // @Tags ai
 // @Param db_name query string true "Database name"
+// @Param limit query int false "Maximum number of queries to analyze (default: 5)" minimum(1)
 // @Success 200 {object} AnalysisResult
 // @Failure 400 {object} AnalysisResult
 // @Failure 500 {object} AnalysisResult

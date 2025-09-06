@@ -48,6 +48,69 @@ const docTemplate = `{
             }
         },
         "/v1/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a paginated list of all users (ADMIN role required)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "List users (Admin only)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Number of users to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of users to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ListUsersResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -116,6 +179,219 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/admin/users/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Soft delete a user (ADMIN role required)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete user (Admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{id}/role": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a user's role (ADMIN role required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update user role (Admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update role request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateUserRoleReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/admin/users/{id}/status": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Activate or deactivate a user (ADMIN role required)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Activate/Deactivate user (Admin only)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update status request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateUserStatusReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UserResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/ai-analysis": {
             "get": {
                 "tags": [
@@ -129,6 +405,13 @@ const docTemplate = `{
                         "name": "db_name",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Maximum number of queries to analyze (default: 5)",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -338,62 +621,23 @@ const docTemplate = `{
                 }
             }
         },
-        "/v1/sql-logs/databases": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "sql-logs"
-                ],
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "summary": "List databases with SQL logs",
-                "description": "Returns distinct database names that have SQL log entries.",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ListDatabasesResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/handlers.ErrorEnvelope"
-                        }
-                    }
-                }
-            }
-        },
         "/v1/sql-logs": {
             "get": {
+                "description": "Provide database name via query parameter \"db\" to list its SQL queries.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "sql-logs"
                 ],
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "summary": "List SQL queries by database",
-                "description": "Provide database name via query parameter \"db\" to list its SQL queries.",
                 "parameters": [
                     {
-                        "name": "db",
-                        "in": "query",
-                        "required": true,
                         "type": "string",
                         "description": "Database name",
-                        "minLength": 1,
-                        "maxLength": 128,
-                        "pattern": "^[A-Za-z0-9_.-]{1,128}$"
+                        "name": "db",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -418,8 +662,379 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/sql-logs/report": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Aggregated anomalies and metrics within a time range. Defaults: last 7 days. Thresholds: slow_ms \u003e= 1000 OR (exec_time_ms \u003e= 500 AND exec_count \u003e= 100).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "SQL log report (JSON)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start time (RFC3339 or YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (RFC3339 or YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by database name",
+                        "name": "db",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 5000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 500,
+                        "description": "Max anomalies to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Slow threshold in ms",
+                        "name": "slow_ms",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Frequent+slow time threshold in ms",
+                        "name": "freq_slow_ms",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Frequent count threshold",
+                        "name": "freq_count",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Hard cap upper bound for anomalies count",
+                        "name": "cap",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated percentiles in 0..100. Default 50,75,90,95,99",
+                        "name": "pcts",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Top query patterns count. Default 20, min 1, max 200",
+                        "name": "top_patterns",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/sqllog.ReportData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/sql-logs/report.csv": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Download the aggregated report as CSV.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "SQL log report (CSV)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start time (RFC3339 or YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (RFC3339 or YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by database name",
+                        "name": "db",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 5000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 500,
+                        "description": "Max anomalies to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Slow threshold in ms",
+                        "name": "slow_ms",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Frequent+slow time threshold in ms",
+                        "name": "freq_slow_ms",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Frequent count threshold",
+                        "name": "freq_count",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Hard cap upper bound for anomalies count",
+                        "name": "cap",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated percentiles in 0..100. Default 50,75,90,95,99",
+                        "name": "pcts",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Top query patterns count. Default 20, min 1, max 200",
+                        "name": "top_patterns",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CSV content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/sql-logs/report.pdf": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Download the aggregated report as PDF.",
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "SQL log report (PDF)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start time (RFC3339 or YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (RFC3339 or YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by database name",
+                        "name": "db",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 5000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 500,
+                        "description": "Max anomalies to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Slow threshold in ms",
+                        "name": "slow_ms",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Frequent+slow time threshold in ms",
+                        "name": "freq_slow_ms",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Frequent count threshold",
+                        "name": "freq_count",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Hard cap upper bound for anomalies count",
+                        "name": "cap",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated percentiles in 0..100. Default 50,75,90,95,99",
+                        "name": "pcts",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Top query patterns count. Default 20, min 1, max 200",
+                        "name": "top_patterns",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "PDF content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/sql-logs/scan": {
+            "get": {
+                "description": "Apply rule: exec_time_ms \u003e threshold AND exec_count \u003e threshold (defaults: 500ms, 100). Thresholds can be overridden via query params.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "Scan for abnormal SQL queries",
+                "parameters": [
+                    {
+                        "maximum": 1000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum number of items to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Database name to filter results",
+                        "name": "dbName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 500,
+                        "description": "Minimum exec_time_ms to be considered abnormal",
+                        "name": "exec_time_ms",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Minimum exec_count to be considered abnormal",
+                        "name": "exec_count",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/sql-logs/upload": {
             "post": {
+                "description": "Accepts multipart/form-data with field \"file\" (.log or .txt), parses valid entries and stores them; malformed lines are reported.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -430,14 +1045,13 @@ const docTemplate = `{
                     "sql-logs"
                 ],
                 "summary": "Upload SQL log file",
-                "description": "Accepts multipart/form-data with field \"file\" (.log or .txt), parses valid entries and stores them; malformed lines are reported.",
                 "parameters": [
                     {
+                        "type": "file",
+                        "description": "logsql.txt",
                         "name": "file",
                         "in": "formData",
-                        "required": true,
-                        "type": "file",
-                        "description": "logsql.txt"
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -510,6 +1124,40 @@ const docTemplate = `{
                         "message": {
                             "type": "string"
                         }
+                    }
+                }
+            }
+        },
+        "handlers.ListByDBResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.SQLLogItem"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.ListUsersResp": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.UserResp"
                     }
                 }
             }
@@ -608,6 +1256,65 @@ const docTemplate = `{
                 }
             }
         },
+        "handlers.SQLLogItem": {
+            "type": "object",
+            "properties": {
+                "exec_count": {
+                    "type": "integer"
+                },
+                "exec_time_ms": {
+                    "type": "integer"
+                },
+                "sql_query": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateUserRoleReq": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UpdateUserStatusReq": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "handlers.UploadResponse": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "inserted": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "skipped": {
+                    "type": "integer"
+                },
+                "total_lines": {
+                    "type": "integer"
+                }
+            }
+        },
         "handlers.UserResp": {
             "type": "object",
             "properties": {
@@ -634,76 +1341,137 @@ const docTemplate = `{
                 }
             }
         },
-        "handlers.ListDatabasesResponse": {
+        "sqllog.AnomalyDetail": {
             "type": "object",
             "properties": {
-                "databases": {
+                "db_name": {
+                    "type": "string"
+                },
+                "exec_count": {
+                    "type": "integer"
+                },
+                "exec_time_ms": {
+                    "type": "integer"
+                },
+                "reasons": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "handlers.SQLLogItem": {
-            "type": "object",
-            "properties": {
+                },
                 "sql_query": {
                     "type": "string"
                 },
-                "exec_time_ms": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "exec_count": {
-                    "type": "integer",
-                    "format": "int64"
-                }
-            }
-        },
-        "handlers.ListByDBResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handlers.SQLLogItem"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.UploadResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "total_lines": {
-                    "type": "integer",
-                    "format": "int32"
-                },
-                "inserted": {
-                    "type": "integer",
-                    "format": "int32"
-                },
-                "skipped": {
-                    "type": "integer",
-                    "format": "int32"
-                },
-                "errors": {
+                "suggestions": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "sqllog.PatternStat": {
+            "type": "object",
+            "properties": {
+                "occurrences": {
+                    "type": "integer"
                 },
-                "content_type": {
+                "pattern": {
+                    "type": "string"
+                }
+            }
+        },
+        "sqllog.PercentileSet": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "number",
+                "format": "float64"
+            }
+        },
+        "sqllog.Percentiles": {
+            "type": "object",
+            "properties": {
+                "exec_count": {
+                    "$ref": "#/definitions/sqllog.PercentileSet"
+                },
+                "exec_time_ms": {
+                    "$ref": "#/definitions/sqllog.PercentileSet"
+                }
+            }
+        },
+        "sqllog.ReportData": {
+            "type": "object",
+            "properties": {
+                "anomalies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sqllog.AnomalyDetail"
+                    }
+                },
+                "generated_at": {
                     "type": "string"
                 },
-                "filename": {
+                "percentiles_by_db": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/sqllog.Percentiles"
+                    }
+                },
+                "percentiles_overall": {
+                    "description": "Extended statistics",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/sqllog.Percentiles"
+                        }
+                    ]
+                },
+                "summary": {
+                    "$ref": "#/definitions/sqllog.ReportSummary"
+                },
+                "timezone": {
                     "type": "string"
+                },
+                "top_patterns_by_db": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/sqllog.PatternStat"
+                        }
+                    }
+                },
+                "top_patterns_overall": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/sqllog.PatternStat"
+                    }
+                }
+            }
+        },
+        "sqllog.ReportSummary": {
+            "type": "object",
+            "properties": {
+                "anomaly_count": {
+                    "type": "integer"
+                },
+                "by_db": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "from": {
+                    "type": "string"
+                },
+                "suggestion_count": {
+                    "type": "integer"
+                },
+                "to": {
+                    "type": "string"
+                },
+                "total_queries": {
+                    "type": "integer"
                 }
             }
         }
