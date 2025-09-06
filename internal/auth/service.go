@@ -282,3 +282,189 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (*db.User, s
 
 	return &u, access, accessExp, newRefresh, newRefreshExp, nil
 }
+
+// ListUsers returns a paginated list of users (for admin use)
+func (s *Service) ListUsers(ctx context.Context, limit, offset int) ([]*db.User, int64, error) {
+	var users []*db.User
+	var total int64
+
+	// Get total count
+	if err := s.dbx.Gorm.WithContext(ctx).Model(&db.User{}).Count(&total).Error; err != nil {
+		return nil, 0, fmt.Errorf("count users: %w", err)
+	}
+
+	// Get paginated users
+	if err := s.dbx.Gorm.WithContext(ctx).
+		Limit(limit).
+		Offset(offset).
+		Order("created_time DESC").
+		Find(&users).Error; err != nil {
+		return nil, 0, fmt.Errorf("list users: %w", err)
+	}
+
+	return users, total, nil
+}
+
+// UpdateUserStatus activates or deactivates a user by adding/removing an "active" field
+// Since the current User model doesn't have an active field, we'll use a soft approach
+// by updating the user's role to include "_INACTIVE" suffix for inactive users
+func (s *Service) UpdateUserStatus(ctx context.Context, userID string, active bool, updatedBy string) (*db.User, error) {
+	var user db.User
+	if err := s.dbx.Gorm.WithContext(ctx).First(&user, "id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("find user: %w", err)
+	}
+
+	// Don't allow deactivating ADMIN users
+	if user.Role == "ADMIN" {
+		return nil, fmt.Errorf("cannot modify ADMIN user status")
+	}
+
+	// Update role based on active status
+	var newRole string
+	if active {
+		// Remove _INACTIVE suffix if present
+		if len(user.Role) > 9 && user.Role[len(user.Role)-9:] == "_INACTIVE" {
+			newRole = user.Role[:len(user.Role)-9]
+		} else {
+			newRole = user.Role // Already active
+		}
+	} else {
+		// Add _INACTIVE suffix if not present
+		if len(user.Role) > 9 && user.Role[len(user.Role)-9:] == "_INACTIVE" {
+			newRole = user.Role // Already inactive
+		} else {
+			newRole = user.Role + "_INACTIVE"
+		}
+	}
+
+	// Update user
+	if err := s.dbx.Gorm.WithContext(ctx).
+		Model(&user).
+		Updates(map[string]interface{}{
+			"role":       newRole,
+			"updated_by": updatedBy,
+		}).Error; err != nil {
+		return nil, fmt.Errorf("update user status: %w", err)
+	}
+
+	// Reload user to get updated data
+	if err := s.dbx.Gorm.WithContext(ctx).First(&user, "id = ?", userID).Error; err != nil {
+		return nil, fmt.Errorf("reload user: %w", err)
+	}
+
+	return &user, nil
+}
+
+// DeleteUser soft deletes a user by updating their username/email to include deleted timestamp
+func (s *Service) DeleteUser(ctx context.Context, userID, deletedBy string) error {
+	var user db.User
+	if err := s.dbx.Gorm.WithContext(ctx).First(&user, "id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("user not found")
+		}
+		return fmt.Errorf("find user: %w", err)
+	}
+
+	// Don't allow deleting ADMIN users
+	if user.Role == "ADMIN" {
+		return fmt.Errorf("cannot delete ADMIN user")
+	}
+
+	// Soft delete by updating username and email to include timestamp
+	timestamp := time.Now().Unix()
+	deletedUsername := fmt.Sprintf("%s_deleted_%d", user.Username, timestamp)
+	deletedEmail := fmt.Sprintf("%s_deleted_%d", user.Email, timestamp)
+
+	if err := s.dbx.Gorm.WithContext(ctx).
+		Model(&user).
+		Updates(map[string]interface{}{
+			"username":   deletedUsername,
+			"email":      deletedEmail,
+			"role":       "DELETED",
+			"updated_by": deletedBy,
+		}).Error; err != nil {
+		return fmt.Errorf("delete user: %w", err)
+	}
+
+	// Delete all refresh tokens for this user
+	if err := s.dbx.Gorm.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Delete(&db.RefreshToken{}).Error; err != nil {
+		s.log.Error("failed to delete refresh tokens for deleted user", "user_id", userID, "err", err)
+	}
+
+	return nil
+}
+
+// IsUserActive checks if a user is active based on their role
+func (s *Service) IsUserActive(user *db.User) bool {
+	if user == nil {
+		return false
+	}
+	// User is inactive if role ends with "_INACTIVE" or is "DELETED"
+	if user.Role == "DELETED" {
+		return false
+	}
+	if len(user.Role) > 9 && user.Role[len(user.Role)-9:] == "_INACTIVE" {
+		return false
+	}
+	return true
+}
+
+// UpdateUserRole updates a user's role (for admin use)
+func (s *Service) UpdateUserRole(ctx context.Context, userID, newRole, updatedBy string) (*db.User, error) {
+	if userID == "" || newRole == "" || updatedBy == "" {
+		return nil, fmt.Errorf("missing required fields")
+	}
+
+	// Validate that the new role exists
+	var roleCount int64
+	if err := s.dbx.Gorm.WithContext(ctx).
+		Model(&db.Role{}).
+		Where("code = ?", newRole).
+		Count(&roleCount).Error; err != nil {
+		return nil, fmt.Errorf("check role: %w", err)
+	}
+	if roleCount == 0 {
+		return nil, fmt.Errorf("invalid role: %s", newRole)
+	}
+
+	// Find the user to update
+	var user db.User
+	if err := s.dbx.Gorm.WithContext(ctx).First(&user, "id = ?", userID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("find user: %w", err)
+	}
+
+	// Don't allow changing ADMIN users' roles
+	if user.Role == "ADMIN" {
+		return nil, fmt.Errorf("cannot modify ADMIN user role")
+	}
+
+	// Don't allow setting role to ADMIN
+	if newRole == "ADMIN" {
+		return nil, fmt.Errorf("cannot assign ADMIN role")
+	}
+
+	// Update the user's role
+	if err := s.dbx.Gorm.WithContext(ctx).
+		Model(&user).
+		Updates(map[string]interface{}{
+			"role":       newRole,
+			"updated_by": updatedBy,
+		}).Error; err != nil {
+		return nil, fmt.Errorf("update user role: %w", err)
+	}
+
+	// Reload user to get updated data
+	if err := s.dbx.Gorm.WithContext(ctx).First(&user, "id = ?", userID).Error; err != nil {
+		return nil, fmt.Errorf("reload user: %w", err)
+	}
+
+	return &user, nil
+}
