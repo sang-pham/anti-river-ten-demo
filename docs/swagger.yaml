@@ -75,6 +75,55 @@ definitions:
       username:
         type: string
     type: object
+  handlers.ListDatabasesResponse:
+    properties:
+      databases:
+        items:
+          type: string
+        type: array
+    type: object
+  handlers.SQLLogItem:
+    properties:
+      sql_query:
+        type: string
+      exec_time_ms:
+        format: int64
+        type: integer
+      exec_count:
+        format: int64
+        type: integer
+    type: object
+  handlers.ListByDBResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handlers.SQLLogItem'
+        type: array
+      message:
+        type: string
+    type: object
+  handlers.UploadResponse:
+    properties:
+      message:
+        type: string
+      total_lines:
+        format: int32
+        type: integer
+      inserted:
+        format: int32
+        type: integer
+      skipped:
+        format: int32
+        type: integer
+      errors:
+        items:
+          type: string
+        type: array
+      content_type:
+        type: string
+      filename:
+        type: string
+    type: object
 info:
   contact: {}
   description: REST API demo with auth
@@ -220,6 +269,79 @@ paths:
       summary: Register user
       tags:
       - auth
+  /v1/sql-logs/databases:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ListDatabasesResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      summary: List databases with SQL logs
+      description: Returns distinct database names that have SQL log entries.
+      tags:
+      - sql-logs
+  /v1/sql-logs:
+    get:
+      produces:
+      - application/json
+      parameters:
+      - name: db
+        in: query
+        required: true
+        type: string
+        description: Database name
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.ListByDBResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      summary: List SQL queries by database
+      description: Provide database name via query parameter "db" to list its SQL queries.
+      tags:
+      - sql-logs
+  /v1/sql-logs/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      produces:
+      - application/json
+      parameters:
+      - name: file
+        in: formData
+        required: true
+        type: file
+        description: logsql.txt
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.UploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorEnvelope'
+      summary: Upload SQL log file
+      description: Accepts multipart/form-data with field "file" (.log or .txt), parses valid entries and stores them; malformed lines are reported.
+      tags:
+      - sql-logs
 schemes:
 - http
 securityDefinitions:

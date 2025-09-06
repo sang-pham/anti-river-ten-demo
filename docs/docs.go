@@ -231,6 +231,117 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/v1/sql-logs/databases": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "List databases with SQL logs",
+                "description": "Returns distinct database names that have SQL log entries.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ListDatabasesResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/sql-logs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "List SQL queries by database",
+                "description": "Provide database name via query parameter \"db\" to list its SQL queries.",
+                "parameters": [
+                    {
+                        "name": "db",
+                        "in": "query",
+                        "required": true,
+                        "type": "string",
+                        "description": "Database name"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ListByDBResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/sql-logs/upload": {
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sql-logs"
+                ],
+                "summary": "Upload SQL log file",
+                "description": "Accepts multipart/form-data with field \"file\" (.log or .txt), parses valid entries and stores them; malformed lines are reported.",
+                "parameters": [
+                    {
+                        "name": "file",
+                        "in": "formData",
+                        "required": true,
+                        "type": "file",
+                        "description": "logsql.txt"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UploadResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ErrorEnvelope"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -346,6 +457,79 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.ListDatabasesResponse": {
+            "type": "object",
+            "properties": {
+                "databases": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "handlers.SQLLogItem": {
+            "type": "object",
+            "properties": {
+                "sql_query": {
+                    "type": "string"
+                },
+                "exec_time_ms": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "exec_count": {
+                    "type": "integer",
+                    "format": "int64"
+                }
+            }
+        },
+        "handlers.ListByDBResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handlers.SQLLogItem"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.UploadResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "total_lines": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "inserted": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "skipped": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "content_type": {
+                    "type": "string"
+                },
+                "filename": {
                     "type": "string"
                 }
             }
