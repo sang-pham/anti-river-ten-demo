@@ -27,8 +27,28 @@ func NewSQLLogUpload(repo *sqllog.Repository, log *slog.Logger, maxBodyBytes int
 	return &SQLLogUpload{repo: repo, log: log, maxBodyBytes: maxBodyBytes}
 }
 
-// Upload handles multipart form upload with field name "file" containing logsql.log.
-// Validates file extension and parses line-by-line; skips malformed lines.
+// UploadResponse is the success response body for upload endpoint
+type UploadResponse struct {
+	Message     string   `json:"message"`
+	TotalLines  int32    `json:"total_lines"`
+	Inserted    int32    `json:"inserted"`
+	Skipped     int32    `json:"skipped"`
+	Errors      []string `json:"errors"`
+	ContentType string   `json:"content_type"`
+	Filename    string   `json:"filename"`
+}
+
+// Upload godoc
+// @Summary Upload SQL log file
+// @Description Accepts multipart/form-data with field "file" (.log or .txt), parses valid entries and stores them; malformed lines are reported.
+// @Tags sql-logs
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "logsql.txt"
+// @Success 200 {object} UploadResponse
+// @Failure 400 {object} ErrorEnvelope
+// @Failure 500 {object} ErrorEnvelope
+// @Router /v1/sql-logs/upload [post]
 func (h *SQLLogUpload) Upload() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if h.repo == nil {

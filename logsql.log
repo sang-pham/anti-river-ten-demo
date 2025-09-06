@@ -1,0 +1,299 @@
+DB:T24VN,sql:SELECT * FROM transactions WHERE account_id = 555,exec_time_ms:20,exec_count:10
+DB:T24VN,sql:SELECT * FROM accounts WHERE balance > 1000000,exec_time_ms:1100,exec_count:125
+DB:T24VN,sql:SELECT * FROM users WHERE user_id = 32,exec_time_ms:50,exec_count:35
+DB:T24VN,sql:SELECT * FROM action_log WHERE action_id = 32,exec_time_ms:2000,exec_count:105
+DB:WAY4,sql:SELECT * FROM customers WHERE cust_id = 203,exec_time_ms:5005,exec_count:150
+DB:WAY4,sql:SELECT * FROM vip1_accounts WHERE acount_id = 4,exec_time_ms:20,exec_count:101
+DB:WAY4,sql:SELECT * FROM vip_accounts_1 WHERE acount_id = 4,exec_time_ms:1002,exec_count:34
+DB:WAY4,sql:SELECT * FROM vip_accounts_2 WHERE acount_id = 5,exec_time_ms:24,exec_count:78
+DB:WAY4,sql:SELECT * FROM vip_accounts_3 WHERE acount_id = 6,exec_time_ms:29,exec_count:63
+DB:WAY4,sql:SELECT * FROM vip_accounts_4 WHERE acount_id = 7,exec_time_ms:24,exec_count:68
+DB:WAY4,sql:SELECT * FROM vip_accounts_5 WHERE acount_id = 8,exec_time_ms:800,exec_count:20
+DB:WAY4,sql:SELECT * FROM vip_accounts_6 WHERE acount_id = 9,exec_time_ms:100,exec_count:60
+DB:WAY4,sql:SELECT * FROM vip_accounts_7 WHERE acount_id = 10,exec_time_ms:400,exec_count:18
+DB:WAY4,sql:SELECT * FROM vip_accounts_8 WHERE acount_id = 11,exec_time_ms:43,exec_count:71
+DB:WAY4,sql:SELECT * FROM vip_accounts_9 WHERE acount_id = 12,exec_time_ms:24,exec_count:13
+DB:WAY4,sql:SELECT * FROM vip_accounts_10 WHERE acount_id = 13,exec_time_ms:54,exec_count:57
+DB:WAY4,sql:SELECT * FROM vip_accounts_11 WHERE acount_id = 14,exec_time_ms:24,exec_count:30
+DB:WAY4,sql:SELECT * FROM vip_accounts_12 WHERE acount_id = 15,exec_time_ms:501,exec_count:67
+DB:WAY4,sql:SELECT * FROM vip_accounts_13 WHERE acount_id = 16,exec_time_ms:24,exec_count:8
+DB:WAY4,sql:SELECT * FROM vip_accounts_14 WHERE acount_id = 17,exec_time_ms:56,exec_count:98
+DB:WAY4,sql:SELECT * FROM vip_accounts_15 WHERE acount_id = 18,exec_time_ms:647,exec_count:9
+DB:WAY4,sql:SELECT * FROM vip_accounts_16 WHERE acount_id = 19,exec_time_ms:24,exec_count:3
+DB:WAY4,sql:SELECT * FROM vip_accounts_17 WHERE acount_id = 20,exec_time_ms:35,exec_count:56
+DB:WAY4,sql:SELECT * FROM vip_accounts_18 WHERE acount_id = 21,exec_time_ms:68,exec_count:58
+DB:WAY4,sql:SELECT * FROM vip_accounts_19 WHERE acount_id = 22,exec_time_ms:90,exec_count:34
+DB:WAY4,sql:SELECT * FROM vip_accounts_20 WHERE acount_id = 23,exec_time_ms:243,exec_count:24
+DB:EBANK,sql:SELECT * FROM trans_log_1 Create_date  > sysdate -1,exec_time_ms:213,exec_count:18
+DB:EBANK,sql:SELECT * FROM trans_log_2 Create_date  > sysdate -1,exec_time_ms:395,exec_count:59
+DB:EBANK,sql:SELECT * FROM trans_log_3 Create_date  > sysdate -1,exec_time_ms:102,exec_count:106
+DB:EBANK,sql:SELECT * FROM trans_log_4 Create_date  > sysdate -1,exec_time_ms:382,exec_count:103
+DB:EBANK,sql:SELECT * FROM trans_log_5 Create_date  > sysdate -1,exec_time_ms:206,exec_count:65
+DB:EBANK,sql:SELECT * FROM trans_log_6 Create_date  > sysdate -1,exec_time_ms:208,exec_count:112
+DB:EBANK,sql:SELECT * FROM trans_log_7 Create_date  > sysdate -1,exec_time_ms:152,exec_count:35
+DB:EBANK,sql:SELECT * FROM trans_log_8 Create_date  > sysdate -1,exec_time_ms:311,exec_count:56
+DB:EBANK,sql:SELECT * FROM trans_log_9 Create_date  > sysdate -1,exec_time_ms:432,exec_count:62
+DB:EBANK,sql:SELECT * FROM trans_log_10 Create_date  > sysdate -1,exec_time_ms:207,exec_count:27
+DB:EBANK,sql:SELECT * FROM trans_log_11 Create_date  > sysdate -1,exec_time_ms:149,exec_count:5
+DB:EBANK,sql:SELECT * FROM trans_log_12 Create_date  > sysdate -1,exec_time_ms:268,exec_count:62
+DB:EBANK,sql:SELECT * FROM trans_log_13 Create_date  > sysdate -1,exec_time_ms:447,exec_count:22
+DB:EBANK,sql:SELECT * FROM trans_log_14 Create_date  > sysdate -1,exec_time_ms:454,exec_count:42
+DB:EBANK,sql:SELECT * FROM trans_log_15 Create_date  > sysdate -1,exec_time_ms:423,exec_count:80
+DB:EBANK,sql:SELECT * FROM trans_log_16 Create_date  > sysdate -1,exec_time_ms:397,exec_count:15
+DB:EBANK,sql:SELECT * FROM trans_log_17 Create_date  > sysdate -1,exec_time_ms:136,exec_count:114
+DB:EBANK,sql:SELECT * FROM trans_log_18 Create_date  > sysdate -1,exec_time_ms:148,exec_count:109
+DB:EBANK,sql:SELECT * FROM trans_log_19 Create_date  > sysdate -1,exec_time_ms:391,exec_count:99
+DB:EBANK,sql:SELECT * FROM trans_log_20 Create_date  > sysdate -1,exec_time_ms:185,exec_count:38
+DB:EBANK,sql:SELECT * FROM trans_log_21 Create_date  > sysdate -1,exec_time_ms:88,exec_count:42
+DB:EBANK,sql:SELECT * FROM trans_log_22 Create_date  > sysdate -1,exec_time_ms:13,exec_count:59
+DB:EBANK,sql:SELECT * FROM trans_log_23 Create_date  > sysdate -1,exec_time_ms:398,exec_count:30
+DB:T24VN,sql:SELECT * FROM trans_log_24 Create_date  > sysdate -1,exec_time_ms:444,exec_count:52
+DB:T24VN,sql:SELECT * FROM trans_log_25 Create_date  > sysdate -1,exec_time_ms:263,exec_count:81
+DB:T24VN,sql:SELECT * FROM trans_log_26 Create_date  > sysdate -1,exec_time_ms:181,exec_count:9
+DB:T24VN,sql:SELECT * FROM trans_log_27 Create_date  > sysdate -1,exec_time_ms:134,exec_count:17
+DB:T24VN,sql:SELECT * FROM trans_log_28 Create_date  > sysdate -1,exec_time_ms:400,exec_count:5
+DB:T24VN,sql:SELECT * FROM trans_log_29 Create_date  > sysdate -1,exec_time_ms:280,exec_count:26
+DB:T24VN,sql:SELECT * FROM trans_log_30 Create_date  > sysdate -1,exec_time_ms:244,exec_count:66
+DB:EBANK,sql:SELECT * FROM trans_log_31 Create_date  > sysdate -1,exec_time_ms:453,exec_count:47
+DB:EBANK,sql:SELECT * FROM trans_log_32 Create_date  > sysdate -1,exec_time_ms:75,exec_count:13
+DB:EBANK,sql:SELECT * FROM trans_log_33 Create_date  > sysdate -1,exec_time_ms:91,exec_count:95
+DB:EBANK,sql:SELECT * FROM trans_log_34 Create_date  > sysdate -1,exec_time_ms:339,exec_count:100
+DB:EBANK,sql:SELECT * FROM trans_log_35 Create_date  > sysdate -1,exec_time_ms:101,exec_count:52
+DB:EBANK,sql:SELECT * FROM trans_log_36 Create_date  > sysdate -1,exec_time_ms:426,exec_count:6
+DB:EBANK,sql:SELECT * FROM trans_log_37 Create_date  > sysdate -1,exec_time_ms:176,exec_count:103
+DB:EBANK,sql:SELECT * FROM trans_log_38 Create_date  > sysdate -1,exec_time_ms:254,exec_count:71
+DB:EBANK,sql:SELECT * FROM trans_log_39 Create_date  > sysdate -1,exec_time_ms:315,exec_count:52
+DB:EBANK,sql:SELECT * FROM trans_log_40 Create_date  > sysdate -1,exec_time_ms:496,exec_count:4
+DB:EBANK,sql:SELECT * FROM trans_log_41 Create_date  > sysdate -1,exec_time_ms:102,exec_count:112
+DB:EBANK,sql:SELECT * FROM trans_log_42 Create_date  > sysdate -1,exec_time_ms:451,exec_count:95
+DB:EBANK,sql:SELECT * FROM trans_log_43 Create_date  > sysdate -1,exec_time_ms:114,exec_count:46
+DB:EBANK,sql:SELECT * FROM trans_log_44 Create_date  > sysdate -1,exec_time_ms:467,exec_count:13
+DB:EBANK,sql:SELECT * FROM trans_log_45 Create_date  > sysdate -1,exec_time_ms:274,exec_count:33
+DB:EBANK,sql:SELECT * FROM trans_log_46 Create_date  > sysdate -1,exec_time_ms:324,exec_count:87
+DB:EBANK,sql:SELECT * FROM trans_log_47 Create_date  > sysdate -1,exec_time_ms:339,exec_count:92
+DB:EBANK,sql:SELECT * FROM trans_log_48 Create_date  > sysdate -1,exec_time_ms:472,exec_count:57
+DB:EBANK,sql:SELECT * FROM trans_log_49 Create_date  > sysdate -1,exec_time_ms:436,exec_count:47
+DB:EBANK,sql:SELECT * FROM trans_log_50 Create_date  > sysdate -1,exec_time_ms:18,exec_count:90
+DB:EBANK,sql:SELECT * FROM trans_log_51 Create_date  > sysdate -1,exec_time_ms:476,exec_count:9
+DB:EBANK,sql:SELECT * FROM trans_log_52 Create_date  > sysdate -1,exec_time_ms:12,exec_count:14
+DB:EBANK,sql:SELECT * FROM trans_log_53 Create_date  > sysdate -1,exec_time_ms:460,exec_count:14
+DB:EBANK,sql:SELECT * FROM trans_log_54 Create_date  > sysdate -1,exec_time_ms:5,exec_count:82
+DB:EBANK,sql:SELECT * FROM trans_log_55 Create_date  > sysdate -1,exec_time_ms:81,exec_count:103
+DB:EBANK,sql:SELECT * FROM trans_log_56 Create_date  > sysdate -1,exec_time_ms:213,exec_count:4
+DB:EBANK,sql:SELECT * FROM trans_log_57 Create_date  > sysdate -1,exec_time_ms:253,exec_count:118
+DB:EBANK,sql:SELECT * FROM trans_log_58 Create_date  > sysdate -1,exec_time_ms:63,exec_count:106
+DB:EBANK,sql:SELECT * FROM trans_log_59 Create_date  > sysdate -1,exec_time_ms:313,exec_count:80
+DB:EBANK,sql:SELECT * FROM trans_log_60 Create_date  > sysdate -1,exec_time_ms:134,exec_count:66
+DB:EBANK,sql:SELECT * FROM trans_log_61 Create_date  > sysdate -1,exec_time_ms:157,exec_count:101
+DB:EBANK,sql:SELECT * FROM trans_log_62 Create_date  > sysdate -1,exec_time_ms:239,exec_count:83
+DB:EBANK,sql:SELECT * FROM trans_log_63 Create_date  > sysdate -1,exec_time_ms:140,exec_count:109
+DB:EBANK,sql:SELECT * FROM trans_log_64 Create_date  > sysdate -1,exec_time_ms:246,exec_count:110
+DB:EBANK,sql:SELECT * FROM trans_log_65 Create_date  > sysdate -1,exec_time_ms:430,exec_count:102
+DB:EBANK,sql:SELECT * FROM trans_log_66 Create_date  > sysdate -1,exec_time_ms:179,exec_count:26
+DB:EBANK,sql:SELECT * FROM trans_log_67 Create_date  > sysdate -1,exec_time_ms:145,exec_count:21
+DB:EBANK,sql:SELECT * FROM trans_log_68 Create_date  > sysdate -1,exec_time_ms:142,exec_count:45
+DB:EBANK,sql:SELECT * FROM trans_log_69 Create_date  > sysdate -1,exec_time_ms:487,exec_count:35
+DB:EBANK,sql:SELECT * FROM trans_log_70 Create_date  > sysdate -1,exec_time_ms:427,exec_count:38
+DB:EBANK,sql:SELECT * FROM trans_log_71 Create_date  > sysdate -1,exec_time_ms:339,exec_count:8
+DB:EBANK,sql:SELECT * FROM trans_log_72 Create_date  > sysdate -1,exec_time_ms:4,exec_count:46
+DB:EBANK,sql:SELECT * FROM trans_log_73 Create_date  > sysdate -1,exec_time_ms:485,exec_count:37
+DB:EBANK,sql:SELECT * FROM trans_log_74 Create_date  > sysdate -1,exec_time_ms:427,exec_count:90
+DB:EBANK,sql:SELECT * FROM trans_log_75 Create_date  > sysdate -1,exec_time_ms:158,exec_count:87
+DB:EBANK,sql:SELECT * FROM trans_log_76 Create_date  > sysdate -1,exec_time_ms:42,exec_count:2
+DB:EBANK,sql:SELECT * FROM trans_log_77 Create_date  > sysdate -1,exec_time_ms:40,exec_count:13
+DB:EBANK,sql:SELECT * FROM trans_log_78 Create_date  > sysdate -1,exec_time_ms:309,exec_count:77
+DB:EBANK,sql:SELECT * FROM trans_log_79 Create_date  > sysdate -1,exec_time_ms:40,exec_count:68
+DB:EBANK,sql:SELECT * FROM trans_log_80 Create_date  > sysdate -1,exec_time_ms:222,exec_count:118
+DB:EBANK,sql:SELECT * FROM trans_log_81 Create_date  > sysdate -1,exec_time_ms:274,exec_count:8
+DB:EBANK,sql:SELECT * FROM trans_log_82 Create_date  > sysdate -1,exec_time_ms:132,exec_count:99
+DB:EBANK,sql:SELECT * FROM trans_log_83 Create_date  > sysdate -1,exec_time_ms:422,exec_count:51
+DB:EBANK,sql:SELECT * FROM trans_log_84 Create_date  > sysdate -1,exec_time_ms:253,exec_count:98
+DB:EBANK,sql:SELECT * FROM trans_log_85 Create_date  > sysdate -1,exec_time_ms:76,exec_count:17
+DB:EBANK,sql:SELECT * FROM trans_log_86 Create_date  > sysdate -1,exec_time_ms:376,exec_count:28
+DB:EBANK,sql:SELECT * FROM trans_log_87 Create_date  > sysdate -1,exec_time_ms:360,exec_count:106
+DB:EBANK,sql:SELECT * FROM trans_log_88 Create_date  > sysdate -1,exec_time_ms:489,exec_count:105
+DB:EBANK,sql:SELECT * FROM trans_log_89 Create_date  > sysdate -1,exec_time_ms:167,exec_count:28
+DB:EBANK,sql:SELECT * FROM trans_log_90 Create_date  > sysdate -1,exec_time_ms:140,exec_count:57
+DB:EBANK,sql:SELECT * FROM trans_log_91 Create_date  > sysdate -1,exec_time_ms:304,exec_count:64
+DB:EBANK,sql:SELECT * FROM trans_log_92 Create_date  > sysdate -1,exec_time_ms:57,exec_count:77
+DB:EBANK,sql:SELECT * FROM trans_log_93 Create_date  > sysdate -1,exec_time_ms:387,exec_count:102
+DB:EBANK,sql:SELECT * FROM trans_log_94 Create_date  > sysdate -1,exec_time_ms:382,exec_count:33
+DB:EBANK,sql:SELECT * FROM trans_log_95 Create_date  > sysdate -1,exec_time_ms:359,exec_count:113
+DB:EBANK,sql:SELECT * FROM trans_log_96 Create_date  > sysdate -1,exec_time_ms:379,exec_count:96
+DB:EBANK,sql:SELECT * FROM trans_log_97 Create_date  > sysdate -1,exec_time_ms:414,exec_count:48
+DB:EBANK,sql:SELECT * FROM trans_log_98 Create_date  > sysdate -1,exec_time_ms:380,exec_count:35
+DB:EBANK,sql:SELECT * FROM trans_log_99 Create_date  > sysdate -1,exec_time_ms:489,exec_count:12
+DB:MICRO,sql:SELECT * FROM trans_log_100 Create_date  > sysdate -1,exec_time_ms:341,exec_count:5
+DB:MICRO,sql:SELECT * FROM trans_log_101 Create_date  > sysdate -1,exec_time_ms:384,exec_count:16
+DB:MICRO,sql:SELECT * FROM trans_log_102 Create_date  > sysdate -1,exec_time_ms:51,exec_count:111
+DB:MICRO,sql:SELECT * FROM trans_log_103 Create_date  > sysdate -1,exec_time_ms:504,exec_count:103
+DB:MICRO,sql:SELECT * FROM trans_log_104 Create_date  > sysdate -1,exec_time_ms:258,exec_count:8
+DB:MICRO,sql:SELECT * FROM trans_log_105 Create_date  > sysdate -1,exec_time_ms:28,exec_count:88
+DB:MICRO,sql:SELECT * FROM trans_log_106 Create_date  > sysdate -1,exec_time_ms:297,exec_count:116
+DB:MICRO,sql:SELECT * FROM trans_log_107 Create_date  > sysdate -1,exec_time_ms:54,exec_count:95
+DB:MICRO,sql:SELECT * FROM trans_log_108 Create_date  > sysdate -1,exec_time_ms:381,exec_count:9
+DB:MICRO,sql:SELECT * FROM trans_log_109 Create_date  > sysdate -1,exec_time_ms:397,exec_count:13
+DB:EBANK,sql:SELECT * FROM trans_log_110 Create_date  > sysdate -1,exec_time_ms:64,exec_count:80
+DB:EBANK,sql:SELECT * FROM trans_log_111 Create_date  > sysdate -1,exec_time_ms:260,exec_count:81
+DB:EBANK,sql:SELECT * FROM trans_log_112 Create_date  > sysdate -1,exec_time_ms:234,exec_count:80
+DB:EBANK,sql:SELECT * FROM trans_log_113 Create_date  > sysdate -1,exec_time_ms:485,exec_count:108
+DB:EBANK,sql:SELECT * FROM trans_log_114 Create_date  > sysdate -1,exec_time_ms:319,exec_count:110
+DB:EBANK,sql:SELECT * FROM trans_log_115 Create_date  > sysdate -1,exec_time_ms:506,exec_count:98
+DB:EBANK,sql:SELECT * FROM trans_log_116 Create_date  > sysdate -1,exec_time_ms:24,exec_count:44
+DB:EBANK,sql:SELECT * FROM trans_log_117 Create_date  > sysdate -1,exec_time_ms:89,exec_count:20
+DB:EBANK,sql:SELECT * FROM trans_log_118 Create_date  > sysdate -1,exec_time_ms:364,exec_count:90
+DB:EBANK,sql:SELECT * FROM trans_log_119 Create_date  > sysdate -1,exec_time_ms:174,exec_count:92
+DB:EBANK,sql:SELECT * FROM trans_log_120 Create_date  > sysdate -1,exec_time_ms:110,exec_count:105
+DB:EBANK,sql:SELECT * FROM trans_log_121 Create_date  > sysdate -1,exec_time_ms:320,exec_count:52
+DB:EBANK,sql:SELECT * FROM trans_log_122 Create_date  > sysdate -1,exec_time_ms:470,exec_count:26
+DB:EBANK,sql:SELECT * FROM trans_log_123 Create_date  > sysdate -1,exec_time_ms:230,exec_count:84
+DB:EBANK,sql:SELECT * FROM trans_log_124 Create_date  > sysdate -1,exec_time_ms:132,exec_count:82
+DB:T24VN,sql:SELECT * FROM transactions WHERE account_id = 555,exec_time_ms:104,exec_count:41
+DB:T24VN,sql:SELECT * FROM accounts_1 account_id=23,exec_time_ms:454,exec_count:25
+DB:T24VN,sql:SELECT * FROM accounts_2 account_id=24,exec_time_ms:117,exec_count:97
+DB:T24VN,sql:SELECT * FROM accounts_3 account_id=25,exec_time_ms:297,exec_count:94
+DB:T24VN,sql:SELECT * FROM accounts_4 account_id=26,exec_time_ms:342,exec_count:53
+DB:MICRO,sql:SELECT * FROM accounts_5 account_id=27,exec_time_ms:188,exec_count:3
+DB:MICRO,sql:SELECT * FROM accounts_6 account_id=28,exec_time_ms:61,exec_count:29
+DB:MICRO,sql:SELECT * FROM accounts_7 account_id=29,exec_time_ms:335,exec_count:78
+DB:MICRO,sql:SELECT * FROM accounts_8 account_id=30,exec_time_ms:36,exec_count:16
+DB:MICRO,sql:SELECT * FROM accounts_9 account_id=31,exec_time_ms:418,exec_count:68
+DB:MICRO,sql:SELECT * FROM accounts_10 account_id=32,exec_time_ms:381,exec_count:120
+DB:T24VN,sql:SELECT * FROM accounts_11 account_id=33,exec_time_ms:272,exec_count:43
+DB:T24VN,sql:SELECT * FROM accounts_12 account_id=34,exec_time_ms:346,exec_count:68
+DB:T24VN,sql:SELECT * FROM accounts_13 account_id=35,exec_time_ms:213,exec_count:13
+DB:T24VN,sql:SELECT * FROM accounts_14 account_id=36,exec_time_ms:420,exec_count:41
+DB:T24VN,sql:SELECT * FROM accounts_15 account_id=37,exec_time_ms:46,exec_count:96
+DB:T24VN,sql:SELECT * FROM accounts_16 account_id=38,exec_time_ms:166,exec_count:86
+DB:T24VN,sql:SELECT * FROM accounts_17 account_id=39,exec_time_ms:31,exec_count:119
+DB:T24VN,sql:SELECT * FROM accounts_18 account_id=40,exec_time_ms:15,exec_count:73
+DB:T24VN,sql:SELECT * FROM accounts_19 account_id=41,exec_time_ms:459,exec_count:61
+DB:T24VN,sql:SELECT * FROM accounts_20 account_id=42,exec_time_ms:378,exec_count:68
+DB:T24VN,sql:SELECT * FROM accounts_21 account_id=43,exec_time_ms:111,exec_count:52
+DB:T24VN,sql:SELECT * FROM accounts_22 account_id=44,exec_time_ms:208,exec_count:12
+DB:T24VN,sql:SELECT * FROM accounts_23 account_id=45,exec_time_ms:461,exec_count:120
+DB:T24VN,sql:SELECT * FROM accounts_24 account_id=46,exec_time_ms:114,exec_count:35
+DB:T24VN,sql:SELECT * FROM accounts_25 account_id=47,exec_time_ms:149,exec_count:25
+DB:T24VN,sql:SELECT * FROM accounts_26 account_id=48,exec_time_ms:120,exec_count:22
+DB:T24VN,sql:SELECT * FROM accounts_27 account_id=49,exec_time_ms:396,exec_count:45
+DB:T24VN,sql:SELECT * FROM accounts_28 account_id=50,exec_time_ms:63,exec_count:59
+DB:EBANK,sql:SELECT * FROM accounts_29 account_id=51,exec_time_ms:399,exec_count:106
+DB:EBANK,sql:SELECT * FROM accounts_30 account_id=52,exec_time_ms:364,exec_count:95
+DB:EBANK,sql:SELECT * FROM accounts_31 account_id=53,exec_time_ms:103,exec_count:42
+DB:EBANK,sql:SELECT * FROM accounts_32 account_id=54,exec_time_ms:62,exec_count:90
+DB:EBANK,sql:SELECT * FROM accounts_33 account_id=55,exec_time_ms:451,exec_count:42
+DB:EBANK,sql:SELECT * FROM accounts_34 account_id=56,exec_time_ms:32,exec_count:99
+DB:EBANK,sql:SELECT * FROM accounts_35 account_id=57,exec_time_ms:512,exec_count:37
+DB:T24VN,sql:SELECT * FROM accounts_36 account_id=58,exec_time_ms:59,exec_count:58
+DB:T24VN,sql:SELECT * FROM accounts_37 account_id=59,exec_time_ms:9,exec_count:118
+DB:T24VN,sql:SELECT * FROM accounts_38 account_id=60,exec_time_ms:82,exec_count:85
+DB:T24VN,sql:SELECT * FROM accounts_39 account_id=61,exec_time_ms:129,exec_count:31
+DB:T24VN,sql:SELECT * FROM accounts_40 account_id=62,exec_time_ms:361,exec_count:82
+DB:T24VN,sql:SELECT * FROM accounts_41 account_id=63,exec_time_ms:434,exec_count:114
+DB:T24VN,sql:SELECT * FROM accounts_42 account_id=64,exec_time_ms:493,exec_count:34
+DB:T24VN,sql:SELECT * FROM accounts_43 account_id=65,exec_time_ms:441,exec_count:101
+DB:T24VN,sql:SELECT * FROM accounts_44 account_id=66,exec_time_ms:100,exec_count:44
+DB:T24VN,sql:SELECT * FROM accounts_45 account_id=67,exec_time_ms:23,exec_count:13
+DB:T24VN,sql:SELECT * FROM accounts_46 account_id=68,exec_time_ms:400,exec_count:28
+DB:T24VN,sql:SELECT * FROM accounts_47 account_id=69,exec_time_ms:299,exec_count:99
+DB:T24VN,sql:SELECT * FROM accounts_48 account_id=70,exec_time_ms:289,exec_count:118
+DB:T24VN,sql:SELECT * FROM accounts_49 account_id=71,exec_time_ms:78,exec_count:42
+DB:T24VN,sql:SELECT * FROM accounts_50 account_id=72,exec_time_ms:7,exec_count:118
+DB:T24VN,sql:SELECT * FROM accounts_51 account_id=73,exec_time_ms:366,exec_count:65
+DB:T24VN,sql:SELECT * FROM accounts_52 account_id=74,exec_time_ms:488,exec_count:103
+DB:T24VN,sql:SELECT * FROM accounts_53 account_id=75,exec_time_ms:12,exec_count:81
+DB:T24VN,sql:SELECT * FROM accounts_54 account_id=76,exec_time_ms:128,exec_count:80
+DB:T24VN,sql:SELECT * FROM accounts_55 account_id=77,exec_time_ms:421,exec_count:21
+DB:WAY4,sql:SELECT * FROM accounts_56 account_id=78,exec_time_ms:279,exec_count:13
+DB:WAY4,sql:SELECT * FROM accounts_57 account_id=79,exec_time_ms:1,exec_count:58
+DB:WAY4,sql:SELECT * FROM accounts_58 account_id=80,exec_time_ms:54,exec_count:8
+DB:WAY4,sql:SELECT * FROM accounts_59 account_id=81,exec_time_ms:500,exec_count:71
+DB:WAY4,sql:SELECT * FROM accounts_60 account_id=82,exec_time_ms:483,exec_count:40
+DB:WAY4,sql:SELECT * FROM accounts_61 account_id=83,exec_time_ms:414,exec_count:17
+DB:WAY4,sql:SELECT * FROM accounts_62 account_id=84,exec_time_ms:240,exec_count:17
+DB:WAY4,sql:SELECT * FROM accounts_63 account_id=85,exec_time_ms:410,exec_count:41
+DB:T24VN,sql:SELECT * FROM accounts_64 account_id=86,exec_time_ms:268,exec_count:49
+DB:T24VN,sql:SELECT * FROM accounts_65 account_id=87,exec_time_ms:505,exec_count:35
+DB:T24VN,sql:SELECT * FROM accounts_66 account_id=88,exec_time_ms:468,exec_count:26
+DB:T24VN,sql:SELECT * FROM accounts_67 account_id=89,exec_time_ms:35,exec_count:111
+DB:T24VN,sql:SELECT * FROM accounts_68 account_id=90,exec_time_ms:499,exec_count:14
+DB:T24VN,sql:SELECT * FROM accounts_69 account_id=91,exec_time_ms:226,exec_count:114
+DB:T24VN,sql:SELECT * FROM accounts_70 account_id=92,exec_time_ms:89,exec_count:5
+DB:T24VN,sql:SELECT * FROM accounts_71 account_id=93,exec_time_ms:272,exec_count:18
+DB:T24VN,sql:SELECT * FROM accounts_72 account_id=94,exec_time_ms:499,exec_count:78
+DB:T24VN,sql:SELECT * FROM accounts_73 account_id=95,exec_time_ms:228,exec_count:40
+DB:T24VN,sql:SELECT * FROM accounts_74 account_id=96,exec_time_ms:409,exec_count:77
+DB:T24VN,sql:SELECT * FROM accounts_75 account_id=97,exec_time_ms:447,exec_count:82
+DB:T24VN,sql:SELECT * FROM accounts_76 account_id=98,exec_time_ms:264,exec_count:55
+DB:T24VN,sql:SELECT * FROM accounts_77 account_id=99,exec_time_ms:316,exec_count:95
+DB:T24VN,sql:SELECT * FROM accounts_78 account_id=100,exec_time_ms:248,exec_count:29
+DB:T24VN,sql:SELECT * FROM accounts_79 account_id=101,exec_time_ms:445,exec_count:96
+DB:T24VN,sql:SELECT * FROM accounts_80 account_id=102,exec_time_ms:39,exec_count:101
+DB:T24VN,sql:SELECT * FROM accounts_81 account_id=103,exec_time_ms:342,exec_count:52
+DB:T24VN,sql:SELECT * FROM accounts_82 account_id=104,exec_time_ms:63,exec_count:33
+DB:T24VN,sql:SELECT * FROM accounts_83 account_id=105,exec_time_ms:473,exec_count:13
+DB:T24VN,sql:SELECT * FROM accounts_84 account_id=106,exec_time_ms:513,exec_count:13
+DB:T24VN,sql:SELECT * FROM accounts_85 account_id=107,exec_time_ms:155,exec_count:48
+DB:T24VN,sql:SELECT * FROM accounts_86 account_id=108,exec_time_ms:256,exec_count:18
+DB:BIZ,sql:SELECT * FROM accounts_87 account_id=109,exec_time_ms:351,exec_count:113
+DB:BIZ,sql:SELECT * FROM accounts_88 account_id=110,exec_time_ms:443,exec_count:4
+DB:BIZ,sql:SELECT * FROM accounts_89 account_id=111,exec_time_ms:354,exec_count:30
+DB:BIZ,sql:SELECT * FROM accounts_90 account_id=112,exec_time_ms:513,exec_count:17
+DB:BIZ,sql:SELECT * FROM accounts_91 account_id=113,exec_time_ms:295,exec_count:68
+DB:BIZ,sql:SELECT * FROM accounts_92 account_id=114,exec_time_ms:172,exec_count:20
+DB:BIZ,sql:SELECT * FROM accounts_93 account_id=115,exec_time_ms:344,exec_count:45
+DB:BIZ,sql:SELECT * FROM accounts_94 account_id=116,exec_time_ms:310,exec_count:47
+DB:BIZ,sql:SELECT * FROM accounts_95 account_id=117,exec_time_ms:358,exec_count:78
+DB:BIZ,sql:SELECT * FROM accounts_96 account_id=118,exec_time_ms:197,exec_count:114
+DB:BIZ,sql:SELECT * FROM accounts_97 account_id=119,exec_time_ms:448,exec_count:44
+DB:BIZ,sql:SELECT * FROM accounts_98 account_id=120,exec_time_ms:458,exec_count:4
+DB:BIZ,sql:SELECT * FROM accounts_99 account_id=121,exec_time_ms:135,exec_count:19
+DB:BIZ,sql:SELECT * FROM accounts_100 account_id=122,exec_time_ms:298,exec_count:110
+DB:BIZ,sql:SELECT * FROM accounts_101 account_id=123,exec_time_ms:387,exec_count:74
+DB:BIZ,sql:SELECT * FROM accounts_102 account_id=124,exec_time_ms:132,exec_count:21
+DB:BIZ,sql:SELECT * FROM accounts_103 account_id=125,exec_time_ms:401,exec_count:45
+DB:T24VN,sql:SELECT * FROM accounts_104 account_id=126,exec_time_ms:194,exec_count:89
+DB:T24VN,sql:SELECT * FROM accounts_105 account_id=127,exec_time_ms:452,exec_count:14
+DB:T24VN,sql:SELECT * FROM accounts_106 account_id=128,exec_time_ms:106,exec_count:71
+DB:T24VN,sql:SELECT * FROM accounts_107 account_id=129,exec_time_ms:115,exec_count:32
+DB:T24VN,sql:SELECT * FROM accounts_108 account_id=130,exec_time_ms:175,exec_count:117
+DB:T24VN,sql:SELECT * FROM accounts_109 account_id=131,exec_time_ms:511,exec_count:51
+DB:T24VN,sql:SELECT * FROM accounts_110 account_id=132,exec_time_ms:81,exec_count:71
+DB:T24VN,sql:SELECT * FROM accounts_111 account_id=133,exec_time_ms:445,exec_count:1
+DB:T24VN,sql:SELECT * FROM accounts_112 account_id=134,exec_time_ms:453,exec_count:76
+DB:T24VN,sql:SELECT * FROM accounts_113 account_id=135,exec_time_ms:104,exec_count:119
+DB:T24VN,sql:SELECT * FROM accounts_114 account_id=136,exec_time_ms:67,exec_count:29
+DB:T24VN,sql:SELECT * FROM accounts_115 account_id=137,exec_time_ms:53,exec_count:94
+DB:T24VN,sql:SELECT * FROM accounts_116 account_id=138,exec_time_ms:456,exec_count:64
+DB:T24VN,sql:SELECT * FROM accounts_117 account_id=139,exec_time_ms:347,exec_count:32
+DB:T24VN,sql:SELECT * FROM accounts_118 account_id=140,exec_time_ms:190,exec_count:104
+DB:T24VN,sql:SELECT * FROM accounts_119 account_id=141,exec_time_ms:57,exec_count:87
+DB:T24VN,sql:SELECT * FROM accounts_120 account_id=142,exec_time_ms:228,exec_count:83
+DB:T24VN,sql:SELECT * FROM accounts_121 account_id=143,exec_time_ms:54,exec_count:109
+DB:T24VN,sql:SELECT * FROM accounts_122 account_id=144,exec_time_ms:195,exec_count:5
+DB:T24VN,sql:SELECT * FROM accounts_123 account_id=145,exec_time_ms:141,exec_count:59
+DB:T24VN,sql:SELECT * FROM accounts_124 account_id=146,exec_time_ms:357,exec_count:3
+DB:WAY4,sql:SELECT * FROM customers1 cust_id=324,exec_time_ms:115,exec_count:1
+DB:WAY4,sql:SELECT * FROM customers2 cust_id=325,exec_time_ms:341,exec_count:17
+DB:WAY4,sql:SELECT * FROM customers3 cust_id=326,exec_time_ms:308,exec_count:21
+DB:WAY4,sql:SELECT * FROM customers4 cust_id=327,exec_time_ms:432,exec_count:67
+DB:WAY4,sql:SELECT * FROM customers5 cust_id=328,exec_time_ms:361,exec_count:101
+DB:WAY4,sql:SELECT * FROM customers6 cust_id=329,exec_time_ms:210,exec_count:14
+DB:WAY4,sql:SELECT * FROM customers7 cust_id=330,exec_time_ms:318,exec_count:70
+DB:WAY4,sql:SELECT * FROM customers8 cust_id=331,exec_time_ms:468,exec_count:76
+DB:WAY4,sql:SELECT * FROM customers9 cust_id=332,exec_time_ms:368,exec_count:33
+DB:MICRO,sql:SELECT * FROM customers10 cust_id=333,exec_time_ms:484,exec_count:33
+DB:MICRO,sql:SELECT * FROM customers11 cust_id=334,exec_time_ms:375,exec_count:69
+DB:MICRO,sql:SELECT * FROM customers12 cust_id=335,exec_time_ms:324,exec_count:61
+DB:MICRO,sql:SELECT * FROM customers13 cust_id=336,exec_time_ms:170,exec_count:39
+DB:MICRO,sql:SELECT * FROM customers14 cust_id=337,exec_time_ms:230,exec_count:115
+DB:T24VN,sql:SELECT * FROM customers14 cust_id=338,exec_time_ms:338,exec_count:50
+DB:T24VN,sql:SELECT * FROM customers14 cust_id=339,exec_time_ms:433,exec_count:27
+DB:T24VN,sql:SELECT * FROM customers14 cust_id=340,exec_time_ms:113,exec_count:31
+DB:T24VN,sql:SELECT * FROM customers14 cust_id=341,exec_time_ms:141,exec_count:24
+DB:T24VN,sql:SELECT * FROM customers14 cust_id=342,exec_time_ms:400,exec_count:108
+DB:T24VN,sql:SELECT * FROM customers14 cust_id=343,exec_time_ms:328,exec_count:99
+DB:SALE,sql:SELECT * FROM customers14 cust_id=344,exec_time_ms:360,exec_count:101
+DB:SALE,sql:SELECT * FROM customers14 cust_id=345,exec_time_ms:290,exec_count:103
+DB:SALE,sql:SELECT * FROM customers14 cust_id=346,exec_time_ms:49,exec_count:65
+DB:SALE,sql:SELECT * FROM customers14 cust_id=347,exec_time_ms:58,exec_count:46
