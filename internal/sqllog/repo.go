@@ -69,6 +69,87 @@ func (r *Repository) ListAbnormal(ctx context.Context, limit int) ([]SQLLog, err
 	return items, err
 }
 
+// CountAbnormalWithThresholds returns the count of records above provided thresholds.
+func (r *Repository) CountAbnormalWithThresholds(ctx context.Context, execTimeThreshold int64, execCountThreshold int64) (int64, error) {
+	var cnt int64
+	err := r.db.WithContext(ctx).
+		Model(&SQLLog{}).
+		Where("exec_time_ms > ? AND exec_count > ?", execTimeThreshold, execCountThreshold).
+		Count(&cnt).Error
+	return cnt, err
+}
+
+// ListAbnormalWithThresholds returns up to 'limit' records above provided thresholds.
+func (r *Repository) ListAbnormalWithThresholds(ctx context.Context, limit int, execTimeThreshold int64, execCountThreshold int64) ([]SQLLog, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+	var items []SQLLog
+	err := r.db.WithContext(ctx).
+		Where("exec_time_ms > ? AND exec_count > ?", execTimeThreshold, execCountThreshold).
+		Order("exec_time_ms DESC, exec_count DESC").
+		Limit(limit).
+		Find(&items).Error
+	return items, err
+}
+
+// CountAbnormalByDB returns the total number of abnormal queries for a specific database.
+func (r *Repository) CountAbnormalByDB(ctx context.Context, dbName string) (int64, error) {
+	var cnt int64
+	err := r.db.WithContext(ctx).
+		Model(&SQLLog{}).
+		Where("db_name = ? AND exec_time_ms > ? AND exec_count > ?", dbName, AbnormalExecTimeThreshold, AbnormalExecCountThreshold).
+		Count(&cnt).Error
+	return cnt, err
+}
+
+// ListAbnormalByDB returns up to 'limit' abnormal queries for a specific database.
+func (r *Repository) ListAbnormalByDB(ctx context.Context, dbName string, limit int) ([]SQLLog, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+	var items []SQLLog
+	err := r.db.WithContext(ctx).
+		Where("db_name = ? AND exec_time_ms > ? AND exec_count > ?", dbName, AbnormalExecTimeThreshold, AbnormalExecCountThreshold).
+		Order("exec_time_ms DESC, exec_count DESC").
+		Limit(limit).
+		Find(&items).Error
+	return items, err
+}
+
+// CountAbnormalByDBWithThresholds returns the count for a specific database above provided thresholds.
+func (r *Repository) CountAbnormalByDBWithThresholds(ctx context.Context, dbName string, execTimeThreshold int64, execCountThreshold int64) (int64, error) {
+	var cnt int64
+	err := r.db.WithContext(ctx).
+		Model(&SQLLog{}).
+		Where("db_name = ? AND exec_time_ms > ? AND exec_count > ?", dbName, execTimeThreshold, execCountThreshold).
+		Count(&cnt).Error
+	return cnt, err
+}
+
+// ListAbnormalByDBWithThresholds returns up to 'limit' items for a database above provided thresholds.
+func (r *Repository) ListAbnormalByDBWithThresholds(ctx context.Context, dbName string, limit int, execTimeThreshold int64, execCountThreshold int64) ([]SQLLog, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+	var items []SQLLog
+	err := r.db.WithContext(ctx).
+		Where("db_name = ? AND exec_time_ms > ? AND exec_count > ?", dbName, execTimeThreshold, execCountThreshold).
+		Order("exec_time_ms DESC, exec_count DESC").
+		Limit(limit).
+		Find(&items).Error
+	return items, err
+}
+
 // ListDatabases returns distinct database names present in the log table.
 func (r *Repository) ListDatabases(ctx context.Context) ([]string, error) {
 	var names []string
