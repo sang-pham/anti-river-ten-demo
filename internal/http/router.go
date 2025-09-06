@@ -56,24 +56,24 @@ func NewRouter(cfg config.Config, log *slog.Logger, authSvc *auth.Service, sqlLo
 	// SQL log upload endpoint + report endpoints (admin only)
 	if sqlLogRepo != nil {
 		up := handlers.NewSQLLogUpload(sqlLogRepo, log, cfg.MaxBodyBytes)
-		mux.Handle("POST /v1/sql-logs/upload", up.Upload())
+		mux.Handle("POST /v1/sql-logs/upload", handlers.RequireAuth(authSvc)(up.Upload()))
 
 		// SQL log query endpoints
 		q := handlers.NewSQLLogQuery(sqlLogRepo, log)
-		mux.Handle("GET /v1/sql-logs/databases", q.ListDatabases())
-		mux.Handle("GET /v1/sql-logs", q.ListByDB())
+		mux.Handle("GET /v1/sql-logs/databases", handlers.RequireAuth(authSvc)(q.ListDatabases()))
+		mux.Handle("GET /v1/sql-logs", handlers.RequireAuth(authSvc)(q.ListByDB()))
 	}
-		// SQL log scan endpoint (authenticated)
-		if authSvc != nil && sqlLogRepo != nil {
-			scan := handlers.NewSQLLogScan(sqlLogRepo, log)
-			// Support both GET (manual/curl) and POST (UI actions) to avoid 404 when UI uses POST
-			mux.Handle("GET /v1/sql-logs/scan", handlers.RequireAuth(authSvc)(scan.Scan()))
-			mux.Handle("POST /v1/sql-logs/scan", handlers.RequireAuth(authSvc)(scan.Scan()))
-			// Handle CORS preflight even when ALLOWED_ORIGINS is empty (returns 204)
-			mux.Handle("OPTIONS /v1/sql-logs/scan", nhttp.HandlerFunc(func(w nhttp.ResponseWriter, r *nhttp.Request) {
-				w.WriteHeader(nhttp.StatusNoContent)
-			}))
-		}
+	// SQL log scan endpoint (authenticated)
+	if authSvc != nil && sqlLogRepo != nil {
+		scan := handlers.NewSQLLogScan(sqlLogRepo, log)
+		// Support both GET (manual/curl) and POST (UI actions) to avoid 404 when UI uses POST
+		mux.Handle("GET /v1/sql-logs/scan", handlers.RequireAuth(authSvc)(scan.Scan()))
+		mux.Handle("POST /v1/sql-logs/scan", handlers.RequireAuth(authSvc)(scan.Scan()))
+		// Handle CORS preflight even when ALLOWED_ORIGINS is empty (returns 204)
+		mux.Handle("OPTIONS /v1/sql-logs/scan", nhttp.HandlerFunc(func(w nhttp.ResponseWriter, r *nhttp.Request) {
+			w.WriteHeader(nhttp.StatusNoContent)
+		}))
+	}
 
 	// AI analysis endpoint
 	if sqlLogRepo != nil {
