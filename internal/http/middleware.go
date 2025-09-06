@@ -197,22 +197,42 @@ func withRecover(log *slog.Logger, next http.Handler) http.Handler {
 }
 
 func withCORS(allowed []string, next http.Handler) http.Handler {
-	if len(allowed) == 0 {
-		return next
-	}
+	// Caller controls enablement. Pass ["*"] to allow any origin (dev convenience).
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if origin != "" && (isAllowedOrigin(origin, allowed) || allowed[0] == "*") {
+
+		allowedAny := len(allowed) > 0 && allowed[0] == "*"
+		allowedMatch := origin != "" && (allowedAny || isAllowedOrigin(origin, allowed))
+
+		// Always vary on origin/request-headers to keep caches correct
+		w.Header().Add("Vary", "Origin")
+		w.Header().Add("Vary", "Access-Control-Request-Headers")
+
+		if allowedMatch {
+			// Echo the requesting origin (not "*") so credentials are allowed safely
 			w.Header().Set("Access-Control-Allow-Origin", origin)
-			w.Header().Set("Vary", "Origin")
-			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			if r.Method == http.MethodOptions {
-				w.WriteHeader(http.StatusNoContent)
-				return
+
+			// Common API verbs
+			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
+
+			// Reflect requested headers if provided, else a safe default
+			reqHeaders := r.Header.Get("Access-Control-Request-Headers")
+			if reqHeaders == "" {
+				reqHeaders = "Content-Type, Authorization"
 			}
+			w.Header().Set("Access-Control-Allow-Headers", reqHeaders)
+
+			// Cache preflight for 24h
+			w.Header().Set("Access-Control-Max-Age", "86400")
 		}
+
+		// Short-circuit all OPTIONS preflight requests
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
