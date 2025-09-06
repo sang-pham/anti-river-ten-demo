@@ -86,3 +86,12 @@ func (r *Repository) FindByDB(ctx context.Context, dbName string) ([]SQLLog, err
 	return rows, err
 
 }
+
+// FindSlowQueries returns SQL queries that are slow and frequently executed
+func (r *Repository) FindSlowQueries(ctx context.Context, dbName string) ([]SQLLog, error) {
+	var results []SQLLog
+	err := r.db.WithContext(ctx).
+		Where("db_name = ? AND exec_time_ms > ? AND exec_count > ?", dbName, 500, 100).
+		Find(&results).Error
+	return results, err
+}
