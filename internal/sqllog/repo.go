@@ -34,7 +34,6 @@ func (r *Repository) InsertBatch(ctx context.Context, entries []SQLLog) error {
 	return r.db.WithContext(ctx).CreateInBatches(entries, 500).Error
 }
 
-<<<<<<< HEAD
 // Abnormal thresholds as per requirement
 const (
 	AbnormalExecTimeThreshold  int64 = 500
@@ -68,32 +67,6 @@ func (r *Repository) ListAbnormal(ctx context.Context, limit int) ([]SQLLog, err
 		Limit(limit).
 		Find(&items).Error
 	return items, err
-=======
-// ListDatabases returns distinct database names present in the log table.
-func (r *Repository) ListDatabases(ctx context.Context) ([]string, error) {
-	var names []string
-	err := r.db.WithContext(ctx).Model(&SQLLog{}).Distinct().Pluck("db_name", &names).Error
-	return names, err
-}
-
-// FindByDB returns all SQL log entries for a specific database.
-func (r *Repository) FindByDB(ctx context.Context, dbName string) ([]SQLLog, error) {
-	var rows []SQLLog
-	err := r.db.WithContext(ctx).
-		Where("db_name = ?", dbName).
-		Order("created_at DESC, id DESC").
-		Find(&rows).Error
-	return rows, err
->>>>>>> 76a03c880db0a9939c6c79b52d089061b1908538
-}
-
-// FindSlowQueries returns SQL queries that are slow and frequently executed
-func (r *Repository) FindSlowQueries(ctx context.Context, dbName string) ([]SQLLog, error) {
-	var results []SQLLog
-	err := r.db.WithContext(ctx).
-		Where("db_name = ? AND exec_time_ms > ? AND exec_count > ?", dbName, 500, 100).
-		Find(&results).Error
-	return results, err
 }
 
 // ListDatabases returns distinct database names present in the log table.
@@ -111,4 +84,5 @@ func (r *Repository) FindByDB(ctx context.Context, dbName string) ([]SQLLog, err
 		Order("created_at DESC, id DESC").
 		Find(&rows).Error
 	return rows, err
+
 }
