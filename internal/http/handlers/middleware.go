@@ -48,3 +48,22 @@ func RequireAuth(s *auth.Service) func(http.Handler) http.Handler {
 		})
 	}
 }
+
+// RequireAdminRole returns a middleware that requires the user to have ADMIN role.
+// This middleware should be used after RequireAuth middleware.
+func RequireAdminRole() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			u, ok := authctx.UserFrom(r.Context())
+			if !ok || u == nil {
+				writeError(w, http.StatusUnauthorized, "unauthorized", "authentication required")
+				return
+			}
+			if u.Role != "ADMIN" {
+				writeError(w, http.StatusForbidden, "forbidden", "admin role required")
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}

@@ -1,0 +1,144 @@
+{
+  "index_patterns": ["go-demo-*"],
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "index.refresh_interval": "5s",
+    "index.codec": "best_compression",
+    "index.mapping.total_fields.limit": 2000,
+    "index.lifecycle.name": "go-demo-logs-policy",
+    "index.lifecycle.rollover_alias": "go-demo-logs"
+  },
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      },
+      "service": {
+        "type": "keyword"
+      },
+      "version": {
+        "type": "keyword"
+      },
+      "environment": {
+        "type": "keyword"
+      },
+      "level": {
+        "type": "keyword"
+      },
+      "msg": {
+        "type": "text",
+        "analyzer": "standard"
+      },
+      "request_id": {
+        "type": "keyword"
+      },
+      "log_type": {
+        "type": "keyword"
+      },
+      "http": {
+        "properties": {
+          "method": {
+            "type": "keyword"
+          },
+          "url": {
+            "type": "keyword"
+          },
+          "path": {
+            "type": "keyword"
+          },
+          "query": {
+            "type": "text"
+          },
+          "protocol": {
+            "type": "keyword"
+          },
+          "scheme": {
+            "type": "keyword"
+          },
+          "host": {
+            "type": "keyword"
+          },
+          "remote_addr": {
+            "type": "ip"
+          },
+          "user_agent": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "referer": {
+            "type": "keyword"
+          },
+          "content_length": {
+            "type": "long"
+          },
+          "content_type": {
+            "type": "keyword"
+          },
+          "status_code": {
+            "type": "integer"
+          },
+          "status_class": {
+            "type": "keyword"
+          },
+          "response_size_bytes": {
+            "type": "long"
+          }
+        }
+      },
+      "duration_ms": {
+        "type": "float"
+      },
+      "duration_ns": {
+        "type": "long"
+      },
+      "timestamp": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      },
+      "request": {
+        "properties": {
+          "headers": {
+            "type": "object",
+            "enabled": false
+          },
+          "body": {
+            "type": "text",
+            "index": false
+          }
+        }
+      },
+      "response": {
+        "properties": {
+          "body": {
+            "type": "text",
+            "index": false
+          }
+        }
+      },
+      "is_error": {
+        "type": "boolean"
+      },
+      "is_slow": {
+        "type": "boolean"
+      },
+      "hostname": {
+        "type": "keyword"
+      },
+      "fluentd_tag": {
+        "type": "keyword"
+      },
+      "log_processed_at": {
+        "type": "date"
+      }
+    }
+  },
+  "priority": 100,
+  "version": 1
+}

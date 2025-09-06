@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    container_name: go-demo-elasticsearch
+    restart: unless-stopped
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=go-demo-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - elk
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.3
+    container_name: go-demo-kibana
+    restart: unless-stopped
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - SERVER_NAME=kibana
+      - SERVER_HOST=0.0.0.0
+      - XPACK_SECURITY_ENABLED=false
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=a7a6311933d3503b89bc2dbc36572c33a6c10925682e591bffcab6911c06786d
+    volumes:
+      - kibana_data:/usr/share/kibana/data
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    ports:
+      - "5601:5601"
+    networks:
+      - elk
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  fluentd:
+    image: fluent/fluentd-kubernetes-daemonset:v1.16-debian-elasticsearch8-1
+    container_name: go-demo-fluentd
+    restart: unless-stopped
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+      - ./fluentd/plugins:/fluentd/plugins
+      - fluentd_logs:/var/log/fluentd
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+      - "9880:9880" # HTTP input for health checks
+    networks:
+      - elk
+      - appnet
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      - FLUENTD_CONF=fluent.conf
+      - FLUENTD_OPT=-v
+    healthcheck:
+      test:
+        ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/localhost/9880' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  elasticsearch_data:
+    driver: local
+  kibana_data:
+    driver: local
+  fluentd_logs:
+    driver: local
+
+networks:
+  elk:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+  appnet:
+    external: true
+    name: go-demo_appnet

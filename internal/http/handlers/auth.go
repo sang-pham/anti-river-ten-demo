@@ -28,6 +28,13 @@ type RegisterReq struct {
 	Password string `json:"password"`
 }
 
+type CreateUserReq struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+
 type UserResp struct {
 	ID          string    `json:"id"`
 	Username    string    `json:"username"`
@@ -260,5 +267,90 @@ func (h Auth) Refresh() http.Handler {
 			},
 		}
 		writeJSON(w, http.StatusOK, resp)
+	})
+}
+
+// CreateUser godoc
+// @Summary Create user (Admin only)
+// @Description Create a new user with specified role (ADMIN role required)
+// @Tags admin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body CreateUserReq true "Create user request"
+// @Success 201 {object} UserResp
+// @Failure 400 {object} ErrorEnvelope
+// @Failure 401 {object} ErrorEnvelope
+// @Failure 403 {object} ErrorEnvelope
+// @Failure 409 {object} ErrorEnvelope
+// @Failure 500 {object} ErrorEnvelope
+// @Router /v1/admin/users [post]
+func (h Auth) CreateUser() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		defer r.Body.Close()
+
+		// Get the admin user from context
+		adminUser, ok := authctx.UserFrom(r.Context())
+		if !ok || adminUser == nil {
+			writeError(w, http.StatusUnauthorized, "unauthorized", "authentication required")
+			return
+		}
+
+		dec := json.NewDecoder(io.LimitReader(r.Body, h.MaxBodyBytes))
+		dec.DisallowUnknownFields()
+
+		var req CreateUserReq
+		if err := dec.Decode(&req); err != nil {
+			writeError(w, http.StatusBadRequest, "bad_request", "invalid JSON payload")
+			return
+		}
+
+		// Validate role - ADMIN cannot create other ADMIN users
+		if req.Role == "ADMIN" {
+			writeError(w, http.StatusBadRequest, "invalid_role", "cannot create ADMIN users")
+			return
+		}
+
+		// Validate role is one of the allowed roles
+		allowedRoles := []string{"USER", "ANALYZER", "MONITOR", "TEAM_LEADER"}
+		validRole := false
+		for _, role := range allowedRoles {
+			if req.Role == role {
+				validRole = true
+				break
+			}
+		}
+		if !validRole {
+			writeError(w, http.StatusBadRequest, "invalid_role", "invalid role specified")
+			return
+		}
+
+		u, err := h.S.CreateUser(r.Context(), req.Username, req.Email, req.Password, req.Role, adminUser.Username)
+		if err != nil {
+			switch err {
+			case auth.ErrUserExists:
+				writeError(w, http.StatusConflict, "user_exists", "username or email already exists")
+				return
+			default:
+				h.Log.Error("create user failed", "err", err)
+				writeError(w, http.StatusInternalServerError, "server_error", "could not create user")
+				return
+			}
+		}
+
+		resp := UserResp{
+			ID:          u.ID,
+			Username:    u.Username,
+			Email:       u.Email,
+			CreatedBy:   u.CreatedBy,
+			CreatedTime: u.CreatedTime,
+			UpdatedTime: u.UpdatedTime,
+			Role:        u.Role,
+		}
+		writeJSON(w, http.StatusCreated, resp)
 	})
 }

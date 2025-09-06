@@ -73,6 +73,55 @@ func (s *Service) Register(ctx context.Context, username, email, password, creat
 	return u, nil
 }
 
+// CreateUser creates a new user with the specified role (for admin use)
+func (s *Service) CreateUser(ctx context.Context, username, email, password, role, createdBy string) (*db.User, error) {
+	if username == "" || email == "" || password == "" || role == "" {
+		return nil, fmt.Errorf("missing required fields")
+	}
+
+	// Validate role exists
+	var roleCount int64
+	if err := s.dbx.Gorm.WithContext(ctx).
+		Model(&db.Role{}).
+		Where("code = ?", role).
+		Count(&roleCount).Error; err != nil {
+		return nil, fmt.Errorf("check role: %w", err)
+	}
+	if roleCount == 0 {
+		return nil, fmt.Errorf("invalid role: %s", role)
+	}
+
+	// Check if user already exists
+	var count int64
+	if err := s.dbx.Gorm.WithContext(ctx).
+		Model(&db.User{}).
+		Where("username = ? OR email = ?", username, email).
+		Count(&count).Error; err != nil {
+		return nil, fmt.Errorf("check existing: %w", err)
+	}
+	if count > 0 {
+		return nil, ErrUserExists
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("hash password: %w", err)
+	}
+
+	u := &db.User{
+		Username:     username,
+		Email:        email,
+		PasswordHash: string(hash),
+		CreatedBy:    createdBy,
+		UpdatedBy:    createdBy,
+		Role:         role,
+	}
+	if err := s.dbx.Gorm.WithContext(ctx).Create(u).Error; err != nil {
+		return nil, fmt.Errorf("create user: %w", err)
+	}
+	return u, nil
+}
+
 func (s *Service) Login(ctx context.Context, identifier, password string) (*db.User, string, time.Time, string, time.Time, error) {
 	var u db.User
 	if err := s.dbx.Gorm.WithContext(ctx).

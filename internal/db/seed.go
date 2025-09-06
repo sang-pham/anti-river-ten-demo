@@ -20,6 +20,21 @@ func (d *DB) SeedDefaultRoles(ctx context.Context) error {
 			Name:        "Administrator",
 			Description: "Administrator role",
 		},
+		{
+			Code:        "ANALYZER",
+			Name:        "Analyzer",
+			Description: "Data analyzer role",
+		},
+		{
+			Code:        "MONITOR",
+			Name:        "Monitor",
+			Description: "System monitor role",
+		},
+		{
+			Code:        "TEAM_LEADER",
+			Name:        "Team Leader",
+			Description: "Team leader role",
+		},
 	}
 
 	for _, r := range roles {

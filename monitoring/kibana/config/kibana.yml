@@ -1,0 +1,51 @@
+# Kibana configuration for go-demo monitoring
+
+server.name: "go-demo-kibana"
+server.host: "0.0.0.0"
+server.port: 5601
+
+# Elasticsearch configuration
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.requestTimeout: 30000
+elasticsearch.shardTimeout: 30000
+
+# Security settings (disabled for development)
+# xpack.security.enabled: false  # This setting is now controlled via environment variables
+xpack.encryptedSavedObjects.encryptionKey: "a7a6311933d3503b89bc2dbc36572c33a6c10925682e591bffcab6911c06786d"
+
+# Default index pattern (defaultAppId is deprecated in Kibana 8.x)
+# kibana.defaultAppId: "discover"  # This setting has been removed in Kibana 8.x
+
+# Monitoring settings
+monitoring.ui.container.elasticsearch.enabled: true
+monitoring.ui.container.logstash.enabled: false
+
+# Logging settings
+logging.appenders:
+  file:
+    type: file
+    fileName: /usr/share/kibana/logs/kibana.log
+    layout:
+      type: json
+logging.loggers:
+  - name: http.server.response
+    level: debug
+
+
+# Advanced settings
+map.includeElasticMapsService: false
+telemetry.enabled: false
+newsfeed.enabled: false
+
+# Dashboard and visualization settings
+xpack.canvas.enabled: true
+xpack.infra.enabled: true
+xpack.apm.enabled: false
+xpack.uptime.enabled: false
+
+# Data views (index patterns) auto-creation
+data.autocomplete.valueSuggestions.enabled: true
+data.autocomplete.valueSuggestions.timeout: 1000
+
+# Console settings (enabled by default in Kibana 8.x)
+# console.enabled option has been removed in Kibana 8.x

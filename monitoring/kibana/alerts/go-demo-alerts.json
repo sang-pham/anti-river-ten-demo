@@ -1,0 +1,303 @@
+{
+  "version": "8.11.0",
+  "objects": [
+    {
+      "id": "go-demo-error-rate-alert",
+      "type": "alert",
+      "attributes": {
+        "name": "Go Demo API - High Error Rate",
+        "consumer": "alerts",
+        "enabled": true,
+        "alertTypeId": ".es-query",
+        "schedule": {
+          "interval": "1m"
+        },
+        "params": {
+          "index": ["go-demo-*"],
+          "timeField": "@timestamp",
+          "esQuery": {
+            "query": {
+              "bool": {
+                "filter": [
+                  {
+                    "range": {
+                      "@timestamp": {
+                        "gte": "now-5m"
+                      }
+                    }
+                  },
+                  {
+                    "term": {
+                      "log_type": "detailed_request_log"
+                    }
+                  }
+                ]
+              }
+            },
+            "aggs": {
+              "error_rate": {
+                "avg": {
+                  "field": "is_error"
+                }
+              }
+            }
+          },
+          "threshold": [0.05],
+          "thresholdComparator": ">",
+          "timeWindowSize": 5,
+          "timeWindowUnit": "m"
+        },
+        "actions": [
+          {
+            "id": "log-action",
+            "group": "query matched",
+            "params": {
+              "level": "error",
+              "message": "High error rate detected: {{context.value}}% errors in the last 5 minutes"
+            }
+          }
+        ],
+        "tags": ["go-demo", "error-rate", "critical"]
+      }
+    },
+    {
+      "id": "go-demo-slow-response-alert",
+      "type": "alert",
+      "attributes": {
+        "name": "Go Demo API - Slow Response Times",
+        "consumer": "alerts",
+        "enabled": true,
+        "alertTypeId": ".es-query",
+        "schedule": {
+          "interval": "2m"
+        },
+        "params": {
+          "index": ["go-demo-*"],
+          "timeField": "@timestamp",
+          "esQuery": {
+            "query": {
+              "bool": {
+                "filter": [
+                  {
+                    "range": {
+                      "@timestamp": {
+                        "gte": "now-10m"
+                      }
+                    }
+                  },
+                  {
+                    "term": {
+                      "log_type": "detailed_request_log"
+                    }
+                  }
+                ]
+              }
+            },
+            "aggs": {
+              "avg_response_time": {
+                "avg": {
+                  "field": "duration_ms"
+                }
+              },
+              "p95_response_time": {
+                "percentiles": {
+                  "field": "duration_ms",
+                  "percents": [95]
+                }
+              }
+            }
+          },
+          "threshold": [2000],
+          "thresholdComparator": ">",
+          "timeWindowSize": 10,
+          "timeWindowUnit": "m"
+        },
+        "actions": [
+          {
+            "id": "log-action",
+            "group": "query matched",
+            "params": {
+              "level": "warn",
+              "message": "Slow response times detected: 95th percentile is {{context.p95_response_time}}ms"
+            }
+          }
+        ],
+        "tags": ["go-demo", "performance", "warning"]
+      }
+    },
+    {
+      "id": "go-demo-server-errors-alert",
+      "type": "alert",
+      "attributes": {
+        "name": "Go Demo API - Server Errors (5xx)",
+        "consumer": "alerts",
+        "enabled": true,
+        "alertTypeId": ".es-query",
+        "schedule": {
+          "interval": "1m"
+        },
+        "params": {
+          "index": ["go-demo-*"],
+          "timeField": "@timestamp",
+          "esQuery": {
+            "query": {
+              "bool": {
+                "filter": [
+                  {
+                    "range": {
+                      "@timestamp": {
+                        "gte": "now-5m"
+                      }
+                    }
+                  },
+                  {
+                    "term": {
+                      "log_type": "detailed_request_log"
+                    }
+                  },
+                  {
+                    "range": {
+                      "http.status_code": {
+                        "gte": 500,
+                        "lt": 600
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "threshold": [5],
+          "thresholdComparator": ">=",
+          "timeWindowSize": 5,
+          "timeWindowUnit": "m"
+        },
+        "actions": [
+          {
+            "id": "log-action",
+            "group": "query matched",
+            "params": {
+              "level": "error",
+              "message": "Multiple server errors detected: {{context.hits.total}} 5xx errors in the last 5 minutes"
+            }
+          }
+        ],
+        "tags": ["go-demo", "server-errors", "critical"]
+      }
+    },
+    {
+      "id": "go-demo-high-traffic-alert",
+      "type": "alert",
+      "attributes": {
+        "name": "Go Demo API - Unusual High Traffic",
+        "consumer": "alerts",
+        "enabled": true,
+        "alertTypeId": ".es-query",
+        "schedule": {
+          "interval": "5m"
+        },
+        "params": {
+          "index": ["go-demo-*"],
+          "timeField": "@timestamp",
+          "esQuery": {
+            "query": {
+              "bool": {
+                "filter": [
+                  {
+                    "range": {
+                      "@timestamp": {
+                        "gte": "now-15m"
+                      }
+                    }
+                  },
+                  {
+                    "term": {
+                      "log_type": "detailed_request_log"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "threshold": [1000],
+          "thresholdComparator": ">",
+          "timeWindowSize": 15,
+          "timeWindowUnit": "m"
+        },
+        "actions": [
+          {
+            "id": "log-action",
+            "group": "query matched",
+            "params": {
+              "level": "info",
+              "message": "High traffic detected: {{context.hits.total}} requests in the last 15 minutes"
+            }
+          }
+        ],
+        "tags": ["go-demo", "traffic", "info"]
+      }
+    },
+    {
+      "id": "go-demo-authentication-failures-alert",
+      "type": "alert",
+      "attributes": {
+        "name": "Go Demo API - Authentication Failures",
+        "consumer": "alerts",
+        "enabled": true,
+        "alertTypeId": ".es-query",
+        "schedule": {
+          "interval": "2m"
+        },
+        "params": {
+          "index": ["go-demo-*"],
+          "timeField": "@timestamp",
+          "esQuery": {
+            "query": {
+              "bool": {
+                "filter": [
+                  {
+                    "range": {
+                      "@timestamp": {
+                        "gte": "now-10m"
+                      }
+                    }
+                  },
+                  {
+                    "term": {
+                      "log_type": "detailed_request_log"
+                    }
+                  },
+                  {
+                    "wildcard": {
+                      "http.path": "/v1/auth/*"
+                    }
+                  },
+                  {
+                    "term": {
+                      "http.status_code": 401
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "threshold": [10],
+          "thresholdComparator": ">=",
+          "timeWindowSize": 10,
+          "timeWindowUnit": "m"
+        },
+        "actions": [
+          {
+            "id": "log-action",
+            "group": "query matched",
+            "params": {
+              "level": "warn",
+              "message": "Multiple authentication failures detected: {{context.hits.total}} failed auth attempts in the last 10 minutes"
+            }
+          }
+        ],
+        "tags": ["go-demo", "security", "authentication", "warning"]
+      }
+    }
+  ]
+}
