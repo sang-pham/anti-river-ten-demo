@@ -1,0 +1,87 @@
+package handlers
+
+import (
+	"net/http"
+
+	"log/slog"
+
+	"go-demo/internal/sqllog"
+)
+
+type SQLLogQuery struct {
+	repo *sqllog.Repository
+	log  *slog.Logger
+}
+
+func NewSQLLogQuery(repo *sqllog.Repository, log *slog.Logger) *SQLLogQuery {
+	if log == nil {
+		log = slog.Default()
+	}
+	return &SQLLogQuery{repo: repo, log: log}
+}
+
+type sqlLogItem struct {
+	SQLQuery   string `json:"sql_query"`
+	ExecTimeMs int64  `json:"exec_time_ms"`
+	ExecCount  int64  `json:"exec_count"`
+}
+
+// ListDatabases handles GET /v1/sql-logs/databases
+// Returns: { "databases": ["db1","db2", ...] }
+func (h *SQLLogQuery) ListDatabases() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if h.repo == nil {
+			writeError(w, http.StatusInternalServerError, "internal_error", "repository not configured")
+			return
+		}
+		names, err := h.repo.ListDatabases(r.Context())
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal_error", "failed to list databases")
+			h.log.Error("list databases failed", "err", err)
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"databases": names,
+		})
+	})
+}
+
+// ListByDB handles GET /v1/sql-logs?db={db_name}
+// Returns list of queries for the given DB with fields required by AC.
+func (h *SQLLogQuery) ListByDB() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if h.repo == nil {
+			writeError(w, http.StatusInternalServerError, "internal_error", "repository not configured")
+			return
+		}
+		dbName := r.URL.Query().Get("db")
+		if dbName == "" {
+			writeError(w, http.StatusBadRequest, "bad_request", "missing db parameter")
+			return
+		}
+		rows, err := h.repo.FindByDB(r.Context(), dbName)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal_error", "failed to query logs")
+			h.log.Error("find by db failed", "db", dbName, "err", err)
+			return
+		}
+		if len(rows) == 0 {
+			writeJSON(w, http.StatusOK, map[string]any{
+				"message": "Không tìm thấy truy vấn nào cho DB này",
+				"items":   []sqlLogItem{},
+			})
+			return
+		}
+		items := make([]sqlLogItem, 0, len(rows))
+		for _, r := range rows {
+			items = append(items, sqlLogItem{
+				SQLQuery:   r.SQLQuery,
+				ExecTimeMs: r.ExecTimeMs,
+				ExecCount:  r.ExecCount,
+			})
+		}
+		writeJSON(w, http.StatusOK, map[string]any{
+			"items": items,
+		})
+	})
+}

@@ -36,6 +36,13 @@ func FromEnv() (Config, error) {
 		JWTTTL:      parseDuration(getenv("JWT_TTL", "24h"), 24*time.Hour),
 		RefreshTTL:  parseDuration(getenv("REFRESH_TTL", "720h"), 720*time.Hour), // 30 days
 	}
+
+	// Default to permissive CORS in non-production if not explicitly configured.
+	// This prevents local dev CORS errors when ALLOWED_ORIGINS is omitted.
+	if len(cfg.AllowedOrigins) == 0 && cfg.Env != "production" {
+		cfg.AllowedOrigins = []string{"*"}
+	}
+
 	return cfg, nil
 }
 
