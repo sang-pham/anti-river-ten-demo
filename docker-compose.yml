@@ -35,7 +35,7 @@ services:
       # Use the postgres service hostname inside the compose network
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/go_demo?sslmode=disable}
       JWT_SECRET: ${JWT_SECRET:-agrcKBGjR3HfmSJUzuUfZ9WJoLSLsdfi8Y/lAFeCnAM=}
-      JWT_TTL: ${JWT_TTL:-1h}
+      JWT_TTL: ${JWT_TTL:-2h}
       REFRESH_TTL: ${REFRESH_TTL:-24h}
     ports:
       - "${PORT:-8081}:8081"

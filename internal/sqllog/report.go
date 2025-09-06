@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -26,7 +27,15 @@ const (
 	defaultMaxAnomalies = 500
 	maxAnomaliesCap     = 5000
 	defaultTZ           = "Asia/Ho_Chi_Minh"
+
+	// New defaults for extended stats
+	defaultTopPatterns  = 20
+	maxTopPatterns      = 200
+	maxPercentilesCount = 10
 )
+
+// Default percentiles as fractions for percentile_disc
+var defaultPercentilesFractions = []float64{0.50, 0.75, 0.90, 0.95, 0.99}
 
 // ReportFilter defines the query window and optional DB filter.
 // Threshold fields are optional; when zero or negative, defaults are applied.
@@ -39,6 +48,9 @@ type ReportFilter struct {
 	FreqSlowMs int64
 	FreqCount  int64
 	MaxCap     int
+	// Extended stats
+	Pcts        []float64 // percentile fractions in [0..1]
+	TopPatterns int       // number of patterns to return per scope
 }
 
 // ReportSummary contains the high-level metrics.
@@ -67,19 +79,27 @@ type ReportData struct {
 	Timezone    string          `json:"timezone"`
 	Summary     ReportSummary   `json:"summary"`
 	Anomalies   []AnomalyDetail `json:"anomalies"`
+
+	// Extended statistics
+	PercentilesOverall Percentiles              `json:"percentiles_overall,omitempty"`
+	PercentilesByDB    map[string]Percentiles   `json:"percentiles_by_db,omitempty"`
+	TopPatternsOverall []PatternStat            `json:"top_patterns_overall,omitempty"`
+	TopPatternsByDB    map[string][]PatternStat `json:"top_patterns_by_db,omitempty"`
 }
 
 // DefaultFilter returns a 7-day window ending at now, capped limit and default thresholds.
 func DefaultFilter(now time.Time) ReportFilter {
 	return ReportFilter{
-		From:       now.Add(-7 * 24 * time.Hour),
-		To:         now,
-		DB:         "",
-		Limit:      defaultMaxAnomalies,
-		SlowMs:     defaultSlowMs,
-		FreqSlowMs: defaultFreqSlowMs,
-		FreqCount:  defaultFreqCount,
-		MaxCap:     maxAnomaliesCap,
+		From:        now.Add(-7 * 24 * time.Hour),
+		To:          now,
+		DB:          "",
+		Limit:       defaultMaxAnomalies,
+		SlowMs:      defaultSlowMs,
+		FreqSlowMs:  defaultFreqSlowMs,
+		FreqCount:   defaultFreqCount,
+		MaxCap:      maxAnomaliesCap,
+		Pcts:        append([]float64(nil), defaultPercentilesFractions...),
+		TopPatterns: defaultTopPatterns,
 	}
 }
 
@@ -118,6 +138,21 @@ func (r *Repository) Analyze(ctx context.Context, f ReportFilter) (ReportData, e
 	}
 	if f.FreqCount <= 0 {
 		f.FreqCount = defaultFreqCount
+	}
+	// Extended defaults and clamping
+	if len(f.Pcts) == 0 {
+		f.Pcts = append([]float64(nil), defaultPercentilesFractions...)
+	}
+	if len(f.Pcts) > maxPercentilesCount {
+		f.Pcts = f.Pcts[:maxPercentilesCount]
+	}
+	// Ensure fractions are valid [0..1] and sorted unique
+	f.Pcts = sanitizeFractions(f.Pcts)
+	if f.TopPatterns <= 0 {
+		f.TopPatterns = defaultTopPatterns
+	}
+	if f.TopPatterns > maxTopPatterns {
+		f.TopPatterns = maxTopPatterns
 	}
 
 	// Summary total count
@@ -178,6 +213,16 @@ func (r *Repository) Analyze(ctx context.Context, f ReportFilter) (ReportData, e
 		})
 	}
 
+	// Extended computations
+	pctOverall, pctByDB, err := r.computePercentiles(ctx, f)
+	if err != nil {
+		return ReportData{}, fmt.Errorf("compute percentiles: %w", err)
+	}
+	topOverall, topByDB, err := r.computeTopPatterns(ctx, f)
+	if err != nil {
+		return ReportData{}, fmt.Errorf("compute top patterns: %w", err)
+	}
+
 	loc := mustLoadTZ(defaultTZ)
 	data := ReportData{
 		GeneratedAt: now.In(loc),
@@ -190,7 +235,11 @@ func (r *Repository) Analyze(ctx context.Context, f ReportFilter) (ReportData, e
 			From:            f.From.In(loc),
 			To:              f.To.In(loc),
 		},
-		Anomalies: anoms,
+		Anomalies:          anoms,
+		PercentilesOverall: pctOverall,
+		PercentilesByDB:    pctByDB,
+		TopPatternsOverall: topOverall,
+		TopPatternsByDB:    topByDB,
 	}
 	return data, nil
 }
@@ -257,7 +306,7 @@ func contains(sl []string, s string) bool {
 	return false
 }
 
-// ExportCSV writes a UTF-8 CSV with summary then anomaly table.
+// ExportCSV writes a UTF-8 CSV with summary, extended stats, then anomaly table.
 func (r *Repository) ExportCSV(data ReportData) ([]byte, error) {
 	var buf bytes.Buffer
 	w := csv.NewWriter(&buf)
@@ -277,12 +326,64 @@ func (r *Repository) ExportCSV(data ReportData) ([]byte, error) {
 		for k, v := range data.Summary.ByDB {
 			parts = append(parts, fmt.Sprintf("%s=%d", k, v))
 		}
+		sort.Strings(parts)
 		_ = w.Write([]string{"by_db", strings.Join(parts, "; ")})
+	}
+
+	// Extended: Percentiles (Overall)
+	if len(data.PercentilesOverall.ExecTime) > 0 || len(data.PercentilesOverall.ExecCount) > 0 {
+		_ = w.Write([]string{})
+		_ = w.Write([]string{"percentiles_overall_exec_time_ms", fmtPctSet(data.PercentilesOverall.ExecTime)})
+		_ = w.Write([]string{"percentiles_overall_exec_count", fmtPctSet(data.PercentilesOverall.ExecCount)})
+	}
+
+	// Extended: Percentiles (By DB)
+	if len(data.PercentilesByDB) > 0 {
+		_ = w.Write([]string{})
+		keys := make([]string, 0, len(data.PercentilesByDB))
+		for k := range data.PercentilesByDB {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, db := range keys {
+			ps := data.PercentilesByDB[db]
+			_ = w.Write([]string{fmt.Sprintf("percentiles_db_exec_time_ms[%s]", db), fmtPctSet(ps.ExecTime)})
+			_ = w.Write([]string{fmt.Sprintf("percentiles_db_exec_count[%s]", db), fmtPctSet(ps.ExecCount)})
+		}
+	}
+
+	// Extended: Top Patterns Overall
+	if len(data.TopPatternsOverall) > 0 {
+		_ = w.Write([]string{})
+		_ = w.Write([]string{"top_patterns_overall_count", fmt.Sprintf("%d", len(data.TopPatternsOverall))})
+		_ = w.Write([]string{"pattern", "occurrences"})
+		for _, p := range data.TopPatternsOverall {
+			_ = w.Write([]string{p.Pattern, fmt.Sprintf("%d", p.Occurrences)})
+		}
+	}
+
+	// Extended: Top Patterns By DB
+	if len(data.TopPatternsByDB) > 0 {
+		_ = w.Write([]string{})
+		dbs := make([]string, 0, len(data.TopPatternsByDB))
+		for db := range data.TopPatternsByDB {
+			dbs = append(dbs, db)
+		}
+		sort.Strings(dbs)
+		for _, db := range dbs {
+			plist := data.TopPatternsByDB[db]
+			_ = w.Write([]string{fmt.Sprintf("top_patterns_db[%s]", db), fmt.Sprintf("%d", len(plist))})
+			_ = w.Write([]string{"pattern", "occurrences"})
+			for _, p := range plist {
+				_ = w.Write([]string{p.Pattern, fmt.Sprintf("%d", p.Occurrences)})
+			}
+			_ = w.Write([]string{}) // spacer between DBs
+		}
 	}
 
 	_ = w.Write([]string{}) // blank line
 
-	// Table header
+	// Table header for anomalies
 	_ = w.Write([]string{"db_name", "exec_time_ms", "exec_count", "reasons", "suggestions", "sql_query"})
 
 	for _, a := range data.Anomalies {
@@ -307,7 +408,7 @@ func (r *Repository) ExportCSV(data ReportData) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// ExportPDF renders a simple A4 portrait report with title, summary, and a table.
+// ExportPDF renders a simple A4 portrait report with title, summary, extended stats, and a table.
 func (r *Repository) ExportPDF(data ReportData) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetTitle("SQL Log Report", false)
@@ -342,14 +443,105 @@ func (r *Repository) ExportPDF(data ReportData) ([]byte, error) {
 		pdf.Ln(2)
 		pdf.Cell(0, 6, "By DB:")
 		pdf.Ln(6)
-		for k, v := range data.Summary.ByDB {
+		// stable order
+		dbs := make([]string, 0, len(data.Summary.ByDB))
+		for db := range data.Summary.ByDB {
+			dbs = append(dbs, db)
+		}
+		sort.Strings(dbs)
+		for _, k := range dbs {
+			v := data.Summary.ByDB[k]
 			pdf.CellFormat(60, 6, fmt.Sprintf(" - %s:", k), "0", 0, "", false, 0, "")
 			pdf.CellFormat(0, 6, fmt.Sprintf("%d", v), "0", 1, "", false, 0, "")
 		}
 	}
 	pdf.Ln(6)
 
-	// Table header and wrapped rows (avoid column overlap by using MultiCell and dynamic row height)
+	// Extended: Percentiles
+	pageBottom := 287.0
+	ensureSpace := func(h float64) {
+		if pdf.GetY()+h > pageBottom {
+			pdf.AddPage()
+		}
+	}
+	if len(data.PercentilesOverall.ExecTime) > 0 || len(data.PercentilesOverall.ExecCount) > 0 {
+		pdf.SetFont("Arial", "B", 12)
+		pdf.Cell(0, 6, "Percentiles (Overall)")
+		pdf.Ln(7)
+		pdf.SetFont("Arial", "", 11)
+		pdf.Cell(0, 6, fmt.Sprintf("exec_time_ms: %s", fmtPctSet(data.PercentilesOverall.ExecTime)))
+		pdf.Ln(6)
+		pdf.Cell(0, 6, fmt.Sprintf("exec_count:   %s", fmtPctSet(data.PercentilesOverall.ExecCount)))
+		pdf.Ln(8)
+	}
+	if len(data.PercentilesByDB) > 0 {
+		pdf.SetFont("Arial", "B", 12)
+		pdf.Cell(0, 6, "Percentiles (By DB)")
+		pdf.Ln(7)
+		pdf.SetFont("Arial", "", 11)
+		dbs := make([]string, 0, len(data.PercentilesByDB))
+		for db := range data.PercentilesByDB {
+			dbs = append(dbs, db)
+		}
+		sort.Strings(dbs)
+		for _, db := range dbs {
+			ps := data.PercentilesByDB[db]
+			ensureSpace(12)
+			pdf.Cell(0, 6, fmt.Sprintf("DB: %s", db))
+			pdf.Ln(6)
+			pdf.Cell(0, 6, fmt.Sprintf(" - exec_time_ms: %s", fmtPctSet(ps.ExecTime)))
+			pdf.Ln(6)
+			pdf.Cell(0, 6, fmt.Sprintf(" - exec_count:   %s", fmtPctSet(ps.ExecCount)))
+			pdf.Ln(6)
+		}
+		pdf.Ln(2)
+	}
+
+	// Extended: Top Patterns
+	if len(data.TopPatternsOverall) > 0 {
+		pdf.SetFont("Arial", "B", 12)
+		pdf.Cell(0, 6, "Top Patterns (Overall)")
+		pdf.Ln(7)
+		pdf.SetFont("Arial", "B", 10)
+		pdf.CellFormat(140, 6, "Pattern", "0", 0, "", false, 0, "")
+		pdf.CellFormat(0, 6, "Occurrences", "0", 1, "", false, 0, "")
+		pdf.SetFont("Arial", "", 9)
+		for _, p := range data.TopPatternsOverall {
+			ensureSpace(6)
+			pdf.CellFormat(140, 6, truncateOneLine(p.Pattern, 160), "0", 0, "", false, 0, "")
+			pdf.CellFormat(0, 6, fmt.Sprintf("%d", p.Occurrences), "0", 1, "", false, 0, "")
+		}
+		pdf.Ln(3)
+	}
+	if len(data.TopPatternsByDB) > 0 {
+		pdf.SetFont("Arial", "B", 12)
+		pdf.Cell(0, 6, "Top Patterns (By DB)")
+		pdf.Ln(7)
+		dbs := make([]string, 0, len(data.TopPatternsByDB))
+		for db := range data.TopPatternsByDB {
+			dbs = append(dbs, db)
+		}
+		sort.Strings(dbs)
+		for _, db := range dbs {
+			plist := data.TopPatternsByDB[db]
+			pdf.SetFont("Arial", "B", 11)
+			ensureSpace(7)
+			pdf.Cell(0, 6, fmt.Sprintf("DB: %s", db))
+			pdf.Ln(7)
+			pdf.SetFont("Arial", "B", 10)
+			pdf.CellFormat(140, 6, "Pattern", "0", 0, "", false, 0, "")
+			pdf.CellFormat(0, 6, "Occurrences", "0", 1, "", false, 0, "")
+			pdf.SetFont("Arial", "", 9)
+			for _, p := range plist {
+				ensureSpace(6)
+				pdf.CellFormat(140, 6, truncateOneLine(p.Pattern, 160), "0", 0, "", false, 0, "")
+				pdf.CellFormat(0, 6, fmt.Sprintf("%d", p.Occurrences), "0", 1, "", false, 0, "")
+			}
+			pdf.Ln(3)
+		}
+	}
+
+	// Anomalies table header and wrapped rows (avoid column overlap by using MultiCell and dynamic row height)
 	// Adjusted widths to reduce header overflow; still totals ~190mm across A4 portrait page width.
 	pdf.SetFont("Arial", "B", 11)
 	colWidths := []float64{20, 28, 22, 33, 32, 55} // DB, Exec Time, Exec Count, Reasons, Suggestions, SQL
@@ -385,10 +577,13 @@ func (r *Repository) ExportPDF(data ReportData) ([]byte, error) {
 		// body font
 		pdf.SetFont("Arial", "", 9)
 	}
+	// Ensure we start a new page if too close to bottom
+	if pdf.GetY()+20 > pageBottom {
+		pdf.AddPage()
+	}
 	printHeader()
 
 	lineHeight := 5.0
-	pageBottom := 287.0 // A4 height 297mm with ~10mm bottom margin
 	for _, a := range data.Anomalies {
 		reasons := strings.Join(a.Reasons, "|")
 		suggestions := strings.Join(a.Suggestions, "|")
@@ -463,4 +658,61 @@ func truncateOneLine(s string, n int) string {
 		return one[:n]
 	}
 	return one[:n-3] + "..."
+}
+
+// sanitizeFractions ensures percentiles are within [0..1], unique and sorted.
+func sanitizeFractions(in []float64) []float64 {
+	m := make(map[int]struct{}, len(in))
+	var out []float64
+	for _, v := range in {
+		if v < 0 {
+			v = 0
+		}
+		if v > 1 {
+			v = 1
+		}
+		key := int(v*100 + 0.5)
+		if _, ok := m[key]; ok {
+			continue
+		}
+		m[key] = struct{}{}
+		out = append(out, float64(key)/100.0)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
+}
+
+// fmtPctSet renders a PercentileSet as "p50=...,p75=...,..." with stable ordering by percentile.
+func fmtPctSet(ps PercentileSet) string {
+	if len(ps) == 0 {
+		return ""
+	}
+	type kv struct {
+		k string
+		p int
+		v float64
+	}
+	var pairs []kv
+	for k, v := range ps {
+		// parse k like p50 into 50 for sort
+		var p int
+		if len(k) > 1 && (k[0] == 'p' || k[0] == 'P') {
+			fmt.Sscanf(k[1:], "%d", &p)
+		}
+		pairs = append(pairs, kv{k: k, p: p, v: v})
+	}
+	sort.Slice(pairs, func(i, j int) bool { return pairs[i].p < pairs[j].p })
+	parts := make([]string, 0, len(pairs))
+	for _, it := range pairs {
+		parts = append(parts, fmt.Sprintf("%s=%v", it.k, trimFloat(it.v)))
+	}
+	return strings.Join(parts, ",")
+}
+
+func trimFloat(f float64) string {
+	// Show integers without decimals, otherwise up to 3 decimals
+	if f == float64(int64(f)) {
+		return fmt.Sprintf("%d", int64(f))
+	}
+	return fmt.Sprintf("%.3f", f)
 }
