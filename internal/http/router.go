@@ -53,7 +53,7 @@ func NewRouter(cfg config.Config, log *slog.Logger, authSvc *auth.Service, sqlLo
 		mux.Handle("DELETE /v1/admin/users/{id}", adminMiddleware(ah.DeleteUser()))
 	}
 
-	// SQL log upload endpoint
+	// SQL log upload endpoint + report endpoints (admin only)
 	if sqlLogRepo != nil {
 		up := handlers.NewSQLLogUpload(sqlLogRepo, log, cfg.MaxBodyBytes)
 		mux.Handle("POST /v1/sql-logs/upload", up.Upload())
@@ -79,6 +79,19 @@ func NewRouter(cfg config.Config, log *slog.Logger, authSvc *auth.Service, sqlLo
 	if sqlLogRepo != nil {
 		ai := handlers.NewAIAnalysisHandler(sqlLogRepo, log, cfg)
 		mux.Handle("GET /v1/ai-analysis", ai.AIAnalysis())
+		// Reporting endpoints: JSON remains ADMIN-only; CSV/PDF allow ADMIN or TEAM_LEADER
+		if authSvc != nil {
+			rep := handlers.NewSQLLogReport(sqlLogRepo, log, cfg.MaxBodyBytes)
+			adminMiddleware := func(h nhttp.Handler) nhttp.Handler {
+				return handlers.RequireAuth(authSvc)(handlers.RequireAdminRole()(h))
+			}
+			roleMiddleware := func(h nhttp.Handler) nhttp.Handler {
+				return handlers.RequireAuth(authSvc)(handlers.RequireAnyRole("ADMIN", "TEAM_LEADER")(h))
+			}
+			mux.Handle("GET /v1/sql-logs/report", adminMiddleware(rep.ReportJSON()))
+			mux.Handle("GET /v1/sql-logs/report.csv", roleMiddleware(rep.ReportCSV()))
+			mux.Handle("GET /v1/sql-logs/report.pdf", roleMiddleware(rep.ReportPDF()))
+		}
 	}
 
 	// Compose middleware (order matters; first is outermost)

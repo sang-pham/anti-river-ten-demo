@@ -22,12 +22,37 @@ func NewSQLLogQuery(repo *sqllog.Repository, log *slog.Logger) *SQLLogQuery {
 	return &SQLLogQuery{repo: repo, log: log}
 }
 
+// Swagger DTOs
+type ListDatabasesResponse struct {
+	Databases []string `json:"databases"`
+}
+
+type SQLLogItem struct {
+	SQLQuery   string `json:"sql_query"`
+	ExecTimeMs int64  `json:"exec_time_ms"`
+	ExecCount  int64  `json:"exec_count"`
+}
+
+type ListByDBResponse struct {
+	Items   []SQLLogItem `json:"items"`
+	Message string       `json:"message,omitempty"`
+}
+
+// Internal response item type used at runtime
 type sqlLogItem struct {
 	SQLQuery   string `json:"sql_query"`
 	ExecTimeMs int64  `json:"exec_time_ms"`
 	ExecCount  int64  `json:"exec_count"`
 }
 
+// ListDatabases godoc
+// @Summary List databases with SQL logs
+// @Description Returns distinct database names that have SQL log entries.
+// @Tags sql-logs
+// @Produce json
+// @Success 200 {object} ListDatabasesResponse
+// @Failure 500 {object} ErrorEnvelope
+// @Router /v1/sql-logs/databases [get]
 // Strict DB name allowlist: 1-128 chars, letters/digits/underscore/dot/hyphen
 var dbNameRE = regexp.MustCompile(`^[A-Za-z0-9_.-]{1,128}$`)
 
@@ -61,8 +86,16 @@ func (h *SQLLogQuery) ListDatabases() http.Handler {
 	})
 }
 
-// ListByDB handles GET /v1/sql-logs?db={db_name}
-// Returns list of queries for the given DB with fields required by AC.
+// ListByDB godoc
+// @Summary List SQL queries by database
+// @Description Provide database name via query parameter "db" to list its SQL queries.
+// @Tags sql-logs
+// @Produce json
+// @Param db query string true "Database name"
+// @Success 200 {object} ListByDBResponse
+// @Failure 400 {object} ErrorEnvelope
+// @Failure 500 {object} ErrorEnvelope
+// @Router /v1/sql-logs [get]
 func (h *SQLLogQuery) ListByDB() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if h.repo == nil {
